@@ -25,7 +25,7 @@ def drawer_book():
     histos = {}
 
     hname = "nroads_per_event"
-    nbins, xmin, xmax = 200, 0., 400.*options.xscale
+    nbins, xmin, xmax = 200, 0., 200.*options.xscale
     histos[hname] = TH1F(hname, "; # roads/tower/BX"                , nbins, xmin, xmax)
 
     hname = "ncombinations_per_event"
@@ -48,6 +48,26 @@ def drawer_book():
     nbins, xmin, xmax = 80, 0., 80.*options.xscale
     histos[hname] = TH1F(hname, "; # fake tracks/tower/BX"          , nbins, xmin, xmax)
 
+    hname = "nparts_per_event"
+    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    histos[hname] = TH1F(hname, "; # trkParts/tower/BX"             , nbins, xmin, xmax)
+
+    hname = "nfounds_per_event"
+    nbins, xmin, xmax = 80, 0., 80.*options.xscale
+    histos[hname] = TH1F(hname, "; # found trkParts/tower/BX"       , nbins, xmin, xmax)
+
+    hname = "efficiency_per_event"
+    nbins, xmin, xmax = 120, 0., 1.2
+    histos[hname] = TH1F(hname, "; efficiency/tower/BX"             , nbins, xmin, xmax)
+
+    hname = "dupfakerate_per_event"
+    nbins, xmin, xmax = 120, 0., 1.2
+    histos[hname] = TH1F(hname, "; dup+fake rate/tower/BX"          , nbins, xmin, xmax)
+
+    hname = "fakerate_per_event"
+    nbins, xmin, xmax = 120, 0., 1.2
+    histos[hname] = TH1F(hname, "; fake rate/tower/BX"              , nbins, xmin, xmax)
+
     for c in ["good", "duplicate", "fake"]:
         hname = "pt_%s" % c
         nbins, xmin, xmax = 40, 0., 20.
@@ -65,6 +85,8 @@ def drawer_book():
         histos["ngoods_per_event"       ].SetBins(40, 0., 40.)
         histos["nduplicates_per_event"  ].SetBins(40, 0., 40.)
         histos["nfakes_per_event"       ].SetBins(40, 0., 40.)
+        histos["nparts_per_event"       ].SetBins(40, 0., 40.)
+        histos["nfounds_per_event"      ].SetBins(40, 0., 40.)
 
     # Style
     for hname, h in histos.iteritems():
@@ -76,15 +98,15 @@ def drawer_book():
 def drawer_project(tree, histos, options):
     tree.SetBranchStatus("*", 0)
     tree.SetBranchStatus("trkParts_pt"     , 1)
-    #tree.SetBranchStatus("trkParts_eta"    , 1)
-    #tree.SetBranchStatus("trkParts_phi"    , 1)
+    tree.SetBranchStatus("trkParts_eta"    , 1)
+    tree.SetBranchStatus("trkParts_phi"    , 1)
     #tree.SetBranchStatus("trkParts_vx"     , 1)
     #tree.SetBranchStatus("trkParts_vy"     , 1)
-    #tree.SetBranchStatus("trkParts_vz"     , 1)
-    #tree.SetBranchStatus("trkParts_charge" , 1)
-    #tree.SetBranchStatus("trkParts_primary", 1)
-    #tree.SetBranchStatus("trkParts_signal" , 1)
-    #tree.SetBranchStatus("trkParts_pdgId"  , 1)
+    tree.SetBranchStatus("trkParts_vz"     , 1)
+    tree.SetBranchStatus("trkParts_charge" , 1)
+    tree.SetBranchStatus("trkParts_primary", 1)
+    tree.SetBranchStatus("trkParts_signal" , 1)
+    tree.SetBranchStatus("trkParts_pdgId"  , 1)
     tree.SetBranchStatus("AMTTRoads_patternRef" , 1)
     tree.SetBranchStatus("AMTTRoads_stubRefs"   , 1)
     #tree.SetBranchStatus("AMTTTracks_invPt"     , 1)
@@ -105,10 +127,40 @@ def drawer_project(tree, histos, options):
 
         if (ievt % 100 == 0):  print "Processing event: %i" % ievt
 
-        if options.pu == 0:  # single-track events
-            pt = evt.trkParts_pt[0]
-            if not (pt > options.minPt):
+        nparts_all = evt.trkParts_primary.size()
+        trkparts = {}
+
+        for ipart in xrange(nparts_all):
+            if options.pu == 0:  # single-track events
+                if ipart > 0:
+                    break
+
+            charge  = evt.trkParts_charge [ipart]
+            primary = evt.trkParts_primary[ipart]
+            signal  = evt.trkParts_signal [ipart]
+
+            if not (charge!=0 and primary):
                 continue
+
+            if options.signal and not signal:
+                continue
+
+            pt      = evt.trkParts_pt     [ipart]
+            eta     = evt.trkParts_eta    [ipart]
+            phi     = evt.trkParts_phi    [ipart]
+            #vx      = evt.trkParts_vx     [ipart]
+            #vy      = evt.trkParts_vy     [ipart]
+            vz      = evt.trkParts_vz     [ipart]
+            #pdgId   = evt.trkParts_pdgId  [ipart]
+
+            if options.ptmin < pt < options.ptmax and \
+               options.etamin < eta < options.etamax and \
+               options.phimin < phi < options.phimax:
+                trkparts[ipart] = 0
+            else:
+                continue
+
+            if options.verbose:  print ievt, "part ", ipart, pt, eta, phi, vz
 
         nroads_all = evt.AMTTRoads_patternRef.size()
         nroads, ncombs = 0, 0
@@ -160,11 +212,17 @@ def drawer_project(tree, histos, options):
                 nduplicates += 1
                 continue
 
+            if synTpId in trkparts:
+                trkparts[synTpId] = 1
+
             histos["pt_good" ].Fill(track_pt)
             histos["eta_good"].Fill(track_eta)
             ngoods += 1
 
-        if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes
+        nparts = len(trkparts)
+        nfounds = sum([v for k, v in trkparts.iteritems()])
+
+        if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes, nparts, nfounds
 
         assert(ntracks == ngoods + nduplicates + nfakes)
         histos["nroads_per_event"       ].Fill(nroads)
@@ -173,6 +231,16 @@ def drawer_project(tree, histos, options):
         histos["ngoods_per_event"       ].Fill(ngoods)
         histos["nduplicates_per_event"  ].Fill(nduplicates)
         histos["nfakes_per_event"       ].Fill(nfakes)
+
+        assert(nfounds <= nparts)
+        histos["nparts_per_event"       ].Fill(nparts)
+        histos["nfounds_per_event"      ].Fill(nfounds)
+
+        if nparts:
+            histos["efficiency_per_event"   ].Fill(float(nfounds)/nparts)
+        if ntracks:
+            histos["dupfakerate_per_event"  ].Fill(float(nduplicates+nfakes)/(nduplicates+nfakes+ngoods))
+            histos["fakerate_per_event"     ].Fill(float(nfakes)/(nfakes+ngoods))
 
     tree.SetBranchStatus("*", 1)
     return
@@ -326,17 +394,23 @@ def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
     print "--- Variable, mean, 95%% CI, 99%% CI:"
     h = histos["nroads_per_event"]
-    print "nroads per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    print "nroads per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}\n".format(*h.stats)
     h = histos["ncombinations_per_event"]
-    print "ncombs per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    print "ncombs per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}\n".format(*h.stats)
     h = histos["ntracks_per_event"]
-    print "ntrks  per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
-    h = histos["ngoods_per_event"]
-    print "ngoods per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
-    h = histos["nduplicates_per_event"]
-    print "ndupls per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
-    h = histos["nfakes_per_event"]
-    print "nfakes per event\t{0:6.4g}\t{1:6.4g}\t{2:6.4g}".format(*h.stats)
+    print "ntrks  per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}\n".format(*h.stats)
+    #h = histos["ngoods_per_event"]
+    #print "ngoods per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}".format(*h.stats)
+    #h = histos["nduplicates_per_event"]
+    #print "ndupls per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}".format(*h.stats)
+    #h = histos["nfakes_per_event"]
+    #print "nfakes per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}".format(*h.stats)
+
+    print "--- Efficiency, dup+fake rate, fake rate:"
+    eff         = histos["efficiency_per_event"].GetMean()
+    dupfakerate = histos["dupfakerate_per_event"].GetMean()
+    fakerate    = histos["fakerate_per_event"].GetMean()
+    print "eff vs mis-id\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}\n".format(eff, dupfakerate, fakerate)
 
 
 # ______________________________________________________________________________
@@ -369,13 +443,15 @@ if __name__ == '__main__':
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("npatterns", type=int, help="number of patterns to reach the desired coverage")
     parser.add_argument("--coverage", type=float, default=0.95, help="desired coverage (default: %(default)s)")
-    parser.add_argument("--minPt", type=float, default=2, help="min pT for gen particle (default: %(default)s)")
+    parser.add_argument("--minPt", type=float, default=3, help="min pT for gen particle (default: %(default)s)")
     parser.add_argument("--maxChi2", type=float, default=5, help="max reduced chi-squared (default: %(default)s)")
     parser.add_argument("--xscale", type=float, default=1, help="scale factor for the x-axis range (default: %(default)s)")
+    parser.set_defaults(pu=140)
 
     # Parse default arguments
     options = parser.parse_args()
     parse_drawer_options(options)
+    options.ptmin = options.minPt
 
     # Call the main function
     main(options)
