@@ -246,6 +246,17 @@ def drawer_project(tree, histos, options):
     return
 
 def drawer_draw(histos, options):
+    options.logy = True
+
+    def parse_ss(ss):
+        if "lu" in ss:
+            ss = ss.replace("lu", "")
+        elif "sf" in ss:
+            ss = ss.replace("sf", "sf=").replace("_nz", ",nz=")
+            ss = ss.replace("0p", "0.")
+        ss = ss.replace("_", " ")
+        return ss
+
     def displayQuantiles(h, in_quantiles=[0.95,0.99], scalebox=(1.,1.)):
         # Display one-sided confidence intervals, a.k.a quantiles
         n = len(in_quantiles)
@@ -270,7 +281,6 @@ def drawer_draw(histos, options):
         #gPad.Modified(); gPad.Update()
         ps.Draw()
 
-    options.logy = True
     for hname, h in histos.iteritems():
         if options.logy:
             h.SetMaximum(h.GetMaximum() * 14); h.SetMinimum(0.5)
@@ -282,6 +292,7 @@ def drawer_draw(histos, options):
         if hname.endswith("_per_event"):
             displayQuantiles(h)
 
+        tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
         CMS_label()
         save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True)
     return
@@ -392,6 +403,7 @@ def drawer_draw2(histos, options):
 
 def drawer_sitrep(histos, options):
     print "--- SITREP ---------------------------------------------------------"
+    print "--- Using tt{0}, pu{1}, ss={2}, npatterns={3}".format(options.tower, options.pu, options.ss, options.npatterns)
     print "--- Variable, mean, 95%% CI, 99%% CI:"
     h = histos["nroads_per_event"]
     print "nroads per event\n{0:6.4g}\n{1:6.4g}\n{2:6.4g}\n".format(*h.stats)
