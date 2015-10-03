@@ -58,7 +58,8 @@ def get_trajectories(tower, min_pt=2., max_vz=7., max_rho=110.0950, debug=False)
     cotmax = sinh(etamax)
 
     # Magic numbers from tklayout
-    tklayout_phi_magic = 0.175
+    #tklayout_phi_magic = pi/24
+    tklayout_phi_magic = pi/16
     tklayout_z_magic = max_vz/max_rho
 
     if debug:  print "min_pt={0} max_vz={1} max_rho={2:.4f}".format(min_pt, max_vz, max_rho)
@@ -106,10 +107,12 @@ def get_trajectories(tower, min_pt=2., max_vz=7., max_rho=110.0950, debug=False)
     return (traj_phimin, traj_phimax, traj_zmin, traj_zmax, traj_rmin, traj_rmax)
 
 # Filter the modules based on the trajectories
-def filter_modules(trajs, moduleIds, debug=False):
+def filter_modules(trajs, trajsL, trajsR, moduleIds, debug=False):
     results = []
 
     traj_phimin, traj_phimax, traj_zmin, traj_zmax, traj_rmin, traj_rmax = trajs
+    #trajL_phimin, trajL_phimax, trajL_zmin, trajL_zmax, trajL_rmin, trajL_rmax = trajsL
+    #trajR_phimin, trajR_phimax, trajR_zmin, trajR_zmax, trajR_rmin, trajR_rmax = trajsR
 
     def is_phi_good(phis, phimin, phimax):
         return any(get_delta_phi(phimin, phimin) <= get_delta_phi(phi, phimin) <= get_delta_phi(phimax, phimin) for phi in phis)
@@ -125,6 +128,10 @@ def filter_modules(trajs, moduleIds, debug=False):
             r = average(cyl[0::3])
             phimin = traj_phimin(r)
             phimax = traj_phimax(r)
+            #if (get_delta_phi(phimin, trajL_phimax(r)) > 0):
+            #    phimin = trajL_phimax(r)
+            #if (get_delta_phi(trajR_phimin(r), phimax) > 0):
+            #    phimax = trajR_phimin(r)
             zmin = traj_zmin(r)
             zmax = traj_zmax(r)
 
@@ -225,9 +232,11 @@ for tower in xrange(48):
 
     # Get the trajectories
     trajs = get_trajectories(tower)
+    trajsL = get_trajectories((tower/8)*8+((tower-1)%8))
+    trajsR = get_trajectories((tower/8)*8+((tower+1)%8))
 
     # Get the moduleIds
-    tower_moduleIds = filter_modules(trajs, moduleIds_set)
+    tower_moduleIds = filter_modules(trajs, trajsL, trajsR, moduleIds_set)
 
     ttmap[tower] = sorted(tower_moduleIds)
 
