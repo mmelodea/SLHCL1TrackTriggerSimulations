@@ -45,9 +45,19 @@ void AssociativeMemory::freeze() {
 std::vector<unsigned> AssociativeMemory::lookup(const HitBuffer& hitBuffer, const unsigned nLayers, const unsigned maxMisses) {
     std::vector<unsigned> firedPatterns;
 
+    unsigned maxMisses1 = std::min(maxMisses, 8u);
+    const unsigned npatterns_magic = patternBank_.size() * 0.3;
+
     for (std::vector<pattern_type>::const_iterator itpatt = patternBank_.begin();
          itpatt != patternBank_.end(); ++itpatt) {
         unsigned nMisses = 0;
+
+        if (maxMisses == 100) {  // custom logic (experimental!!)
+            if ((itpatt - patternBank_.begin()) < npatterns_magic)
+                maxMisses1 = 1;
+            else
+                maxMisses1 = 0;
+        }
 
         for (pattern_type::const_reverse_iterator itlayer = itpatt->rend() - nLayers;
              itlayer != itpatt->rend(); ++itlayer) {
@@ -57,10 +67,12 @@ std::vector<unsigned> AssociativeMemory::lookup(const HitBuffer& hitBuffer, cons
                 ++nMisses;
 
             // Skip if more misses than allowed
-            if (nMisses > maxMisses)
+            if (nMisses > maxMisses1)
                 break;
         }
-        if (nMisses <= maxMisses)
+
+        bool fired = (nMisses <= maxMisses1);
+        if (fired)
             firedPatterns.push_back(itpatt - patternBank_.begin());
     }
     return firedPatterns;
