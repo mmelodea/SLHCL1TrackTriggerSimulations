@@ -20,6 +20,8 @@ class TTStubReaderCache {
     std::vector<float> *          vp_vy;
     std::vector<float> *          vp_vz;
     std::vector<int> *            vp_charge;
+    std::vector<int> *            vp_pdgId;
+    std::vector<int> *            vp_status;
 
     // Stub information
     std::vector<float> *          vb_x;

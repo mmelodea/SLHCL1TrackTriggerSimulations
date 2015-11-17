@@ -13,6 +13,8 @@ BasicReader::BasicReader(int verbose)
   vp_vy               (0),
   vp_vz               (0),
   vp_charge           (0),
+  vp_pdgId            (0),
+  vp_status           (0),
   //
   vb_x                (0),
   vb_y                (0),
@@ -72,6 +74,8 @@ int BasicReader::init(TString src, bool full) {
     tchain->SetBranchAddress("genParts_vy"       , &(vp_vy));
     tchain->SetBranchAddress("genParts_vz"       , &(vp_vz));
     tchain->SetBranchAddress("genParts_charge"   , &(vp_charge));
+    tchain->SetBranchAddress("genParts_pdgId"    , &(vp_pdgId));
+    tchain->SetBranchAddress("genParts_status"   , &(vp_status));
     if (full)  tchain->SetBranchAddress("TTStubs_x"         , &(vb_x));
     if (full)  tchain->SetBranchAddress("TTStubs_y"         , &(vb_y));
     tchain->SetBranchAddress("TTStubs_z"         , &(vb_z));
@@ -95,6 +99,8 @@ int BasicReader::init(TString src, bool full) {
     tchain->SetBranchStatus("genParts_vy"       , 1);
     tchain->SetBranchStatus("genParts_vz"       , 1);
     tchain->SetBranchStatus("genParts_charge"   , 1);
+    tchain->SetBranchStatus("genParts_pdgId"    , 1);
+    tchain->SetBranchStatus("genParts_status"   , 1);
     if (full)  tchain->SetBranchStatus("TTStubs_x"         , 1);
     if (full)  tchain->SetBranchStatus("TTStubs_y"         , 1);
     tchain->SetBranchStatus("TTStubs_z"         , 1);

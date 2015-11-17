@@ -11,6 +11,8 @@ TTStubReaderCache::TTStubReaderCache(const TTStubReader& reader, int verbose)
   vp_vy               (new std::vector<float>   (*reader.vp_vy)),
   vp_vz               (new std::vector<float>   (*reader.vp_vz)),
   vp_charge           (new std::vector<int>     (*reader.vp_charge)),
+  vp_pdgId            (new std::vector<int>     (*reader.vp_pdgId)),
+  vp_status           (new std::vector<int>     (*reader.vp_status)),
   //
   //vb_x                (new std::vector<float>   (*reader.vb_x)),
   //vb_y                (new std::vector<float>   (*reader.vb_y)),
@@ -37,6 +39,8 @@ TTStubReaderCache::~TTStubReaderCache() {
     delete vp_vy;
     delete vp_vz;
     delete vp_charge;
+    delete vp_pdgId;
+    delete vp_status;
     //
     //delete vb_x;
     //delete vb_y;
