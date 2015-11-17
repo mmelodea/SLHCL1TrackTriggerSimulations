@@ -32,7 +32,7 @@ BasicReader::BasicReader(int verbose)
   verbose_(verbose) {}
 
 BasicReader::~BasicReader() {
-    if (tchain)  delete tchain;
+    //if (tchain)  delete tchain;
 }
 
 int BasicReader::init(TString src, bool full) {
@@ -135,8 +135,8 @@ BasicWriter::BasicWriter(int verbose)
 : verbose_(verbose) {}
 
 BasicWriter::~BasicWriter() {
-    if (ttree)  delete ttree;
-    if (tfile)  delete tfile;
+    //if (ttree)  delete ttree;
+    //if (tfile)  delete tfile;
 }
 
 int BasicWriter::init(TChain* tchain, TString out) {

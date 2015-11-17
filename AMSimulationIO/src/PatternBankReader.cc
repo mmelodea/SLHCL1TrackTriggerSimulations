@@ -26,10 +26,10 @@ PatternBankReader::PatternBankReader(int verbose)
   verbose_(verbose) {}
 
 PatternBankReader::~PatternBankReader() {
-    if (ttree3) delete ttree3;
-    if (ttree2) delete ttree2;
-    if (ttree)  delete ttree;
-    if (tfile)  delete tfile;
+    //if (ttree3) delete ttree3;
+    //if (ttree2) delete ttree2;
+    //if (ttree)  delete ttree;
+    //if (tfile)  delete tfile;
 }
 
 int PatternBankReader::init(TString src) {
@@ -118,10 +118,10 @@ PatternBankWriter::PatternBankWriter(int verbose)
   verbose_(verbose) {}
 
 PatternBankWriter::~PatternBankWriter() {
-    if (ttree3) delete ttree3;
-    if (ttree2) delete ttree2;
-    if (ttree)  delete ttree;
-    if (tfile)  delete tfile;
+    //if (ttree3) delete ttree3;
+    //if (ttree2) delete ttree2;
+    //if (ttree)  delete ttree;
+    //if (tfile)  delete tfile;
 }
 
 int PatternBankWriter::init(TString out) {
