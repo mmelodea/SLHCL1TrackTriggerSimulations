@@ -1,4 +1,5 @@
-#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleaner.h"
+//#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleaner.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCleanerPU.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternMatcher.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MatrixBuilder.h"
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
     // and in config file
     po::options_description config("Configuration");
     config.add_options()
-        ("input,i"      , po::value<std::string>(&option.input)->required(), "Specify input files")
+        ("input,i"      , po::value<std::string>(&option.input)->required(), "Specify input file")
         ("output,o"     , po::value<std::string>(&option.output)->required(), "Specify output file")
         ("bank,b"       , po::value<std::string>(&option.bankfile), "Specify pattern bank file")
         ("matrix,m"     , po::value<std::string>(&option.matrixfile), "Specify matrix constants file")
@@ -204,7 +205,7 @@ int main(int argc, char **argv) {
     if (vm.count("stubCleaning")) {
         std::cout << Color("magenta") << "Start stub cleaning..." << EndColor() << std::endl;
 
-        StubCleaner cleaner(option);
+        StubCleanerPU cleaner(option);
         int exitcode = cleaner.run();
         if (exitcode) {
             std::cerr << "An error occurred during stub cleaning. Exiting." << std::endl;
