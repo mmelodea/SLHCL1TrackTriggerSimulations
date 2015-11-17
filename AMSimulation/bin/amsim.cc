@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
     po::options_description config("Configuration");
     config.add_options()
         ("input,i"      , po::value<std::string>(&option.input)->required(), "Specify input file")
-        ("input2,j"     , po::value<std::string>(&option.input2)->default_value(""), "Specify secondary input file")
         ("output,o"     , po::value<std::string>(&option.output)->required(), "Specify output file")
         ("bank,b"       , po::value<std::string>(&option.bankfile), "Specify pattern bank file")
         ("matrix,m"     , po::value<std::string>(&option.matrixfile), "Specify matrix constants file")

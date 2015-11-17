@@ -9,7 +9,6 @@ namespace slhcl1tt {
 
 struct ProgramOption {
     std::string input;
-    std::string input2;
     std::string output;
     std::string bankfile;
     std::string matrixfile;

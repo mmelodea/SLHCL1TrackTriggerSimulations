@@ -44,7 +44,7 @@ class PatternGenerator {
     // Member functions
 
     // Generate pattern bank
-    int makePatterns(TString src, TString src2);
+    int makePatterns(TString src);
 
     // Write pattern bank
     int writePatterns(TString out);

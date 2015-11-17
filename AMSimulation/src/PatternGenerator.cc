@@ -3,9 +3,6 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubReader.h"
 
-#define POPULARITY_FROM_PU
-
-
 static const unsigned MAX_FREQUENCY = 0xffffffff;  // unsigned
 
 namespace {
@@ -18,7 +15,7 @@ bool sortByFrequency(const std::pair<pattern_type, unsigned>& lhs, const std::pa
 
 // _____________________________________________________________________________
 // Make the patterns
-int PatternGenerator::makePatterns(TString src, TString src2) {
+int PatternGenerator::makePatterns(TString src) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and generating patterns." << std::endl;
 
     // _________________________________________________________________________
@@ -28,14 +25,6 @@ int PatternGenerator::makePatterns(TString src, TString src2) {
         std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
         return 1;
     }
-
-#ifdef POPULARITY_FROM_PU
-    TTStubReader reader2(verbose_);
-    if (reader2.init(src2, false)) {
-        std::cout << Error() << "Failed to initialize TTStubReader." << std::endl;
-        return 1;
-    }
-#endif
 
     // _________________________________________________________________________
     // Get trigger tower reverse map
@@ -137,59 +126,11 @@ int PatternGenerator::makePatterns(TString src, TString src2) {
             }
         }
 
-#ifdef POPULARITY_FROM_PU
-        {
-            // Insert pattern into the bank
-            std::pair<std::map<pattern_type, unsigned>::iterator, bool> ins = patternBank_map_.insert(std::make_pair(patt, 0u));
-            unsigned& freq = ins.first->second;
-
-            if (freq == 0) {  // first time
-                long long nentries2 = reader2.getChain()->GetEntries();
-                //long long nentries2 = 20000;
-                for (long long jevt=0; jevt<nentries2; ++jevt) {
-                    if (reader2.loadTree(jevt) < 0)  break;
-                    reader2.getEntry(jevt);
-
-                    unsigned nMisses = 0;
-
-                    const unsigned nstubs2 = reader2.vb_modId->size();
-                    for (unsigned jstub=0; jstub<nstubs2; ++jstub) {
-                        unsigned moduleId = reader2.vb_modId   ->at(jstub);
-                        float    strip    = reader2.vb_coordx  ->at(jstub);  // in full-strip unit
-                        float    segment  = reader2.vb_coordy  ->at(jstub);  // in full-strip unit
-
-                        float    stub_r   = reader2.vb_r       ->at(jstub);
-                        float    stub_phi = reader2.vb_phi     ->at(jstub);
-                        float    stub_z   = reader2.vb_z       ->at(jstub);
-                        float    stub_ds  = reader2.vb_trigBend->at(jstub);  // in full-strip unit
-                        // Find superstrip ID
-                        unsigned ssId = 0;
-                        if (!arbiter_ -> useGlobalCoord()) {  // local coordinates
-                            ssId = arbiter_ -> superstripLocal(moduleId, strip, segment);
-
-                        } else {                              // global coordinates
-                            ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
-                        }
-
-                        if (ssId != patt.at(jstub))
-                            ++nMisses;
-
-                        if (nMisses > 1)
-                            break;
-                    }
-
-                    if (nMisses <= 1)
-                        ++freq;
-                }
-            }
-        }
-#else
         // Insert pattern into the bank
         ++patternBank_map_[patt];
-#endif
 
         // Update the attributes
-        {
+        if (po_.speedup<1) {
             std::pair<std::map<pattern_type, Attributes *>::iterator, bool> ins = patternAttributes_map_.insert(std::make_pair(patt, new Attributes()));
             Attributes * attr = ins.first->second;
             if (attr) {
@@ -299,20 +240,25 @@ int PatternGenerator::writePatterns(TString out) {
             std::cout << Debug() << Form("... Writing event: %7lld, sorted coverage: %7.5f", ipatt, coverage) << std::endl;
         }
 
+        freq = patternBank_pairs_.at(ipatt).second;
+
+        // Check whether patterns are indeed sorted by frequency
+        assert(oldFreq >= freq);
+        oldFreq = freq;
+        nKept += freq;
+
+        if (freq < (unsigned) po_.minFrequency)  // cut off
+            break;
+
         writer.pb_superstripIds->clear();
         const pattern_type& patt = patternBank_pairs_.at(ipatt).first;
         for (unsigned ilayer=0; ilayer<po_.nLayers; ++ilayer) {
             writer.pb_superstripIds->push_back(patt.at(ilayer));
         }
+        *(writer.pb_frequency) = freq;
 
-
-        {
+        if (po_.speedup<1) {
             const Attributes * attr = patternAttributes_map_.at(patt);
-            assert(attr);
-
-            freq = attr->invPt.getEntries();
-            //freq = patternBank_pairs_.at(ipatt).second;
-            //assert((long int) freq == patternBank_pairs_.at(ipatt).second);
             *(writer.pb_invPt_mean)     = attr->invPt.getMean();
             *(writer.pb_invPt_sigma)    = attr->invPt.getSigma();
             *(writer.pb_cotTheta_mean)  = attr->cotTheta.getMean();
@@ -322,16 +268,6 @@ int PatternGenerator::writePatterns(TString out) {
             *(writer.pb_z0_mean)        = attr->z0.getMean();
             *(writer.pb_z0_sigma)       = attr->z0.getSigma();
         }
-
-        *(writer.pb_frequency) = freq;
-
-        // Check whether patterns are indeed sorted by frequency
-        assert(oldFreq >= freq);
-        oldFreq = freq;
-        nKept += freq;
-
-        if (freq < (unsigned) po_.minFrequency)  // cut off
-            break;
 
         writer.fillPatternBank();
         writer.fillPatternAttributes();
@@ -353,7 +289,7 @@ int PatternGenerator::run() {
     int exitcode = 0;
     Timing(1);
 
-    exitcode = makePatterns(po_.input, po_.input2);
+    exitcode = makePatterns(po_.input);
     if (exitcode)  return exitcode;
     Timing();
 

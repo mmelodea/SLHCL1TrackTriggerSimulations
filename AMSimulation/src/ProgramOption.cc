@@ -16,7 +16,6 @@ std::ostream& operator<<(std::ostream& o, const std::vector<T>& v) {
 std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
     o << "Parsed program options --"
       << "  input: "        << po.input
-      << "  input2: "       << po.input2
       << "  output: "       << po.output
       << "  bankfile: "     << po.bankfile
       << "  matrixfile: "   << po.matrixfile
