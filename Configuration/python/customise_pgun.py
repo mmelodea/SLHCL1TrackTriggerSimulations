@@ -30,25 +30,29 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True, keepSimHits=True):
     # __________________________________________________________________________
     # Customise generation step
 
-    # Remove jets & MET
-    process.pgen = process.pgen.copyAndExclude([process.genJetMET])
+    if hasattr(process, "pgen"):
+        # Remove jets & MET
+        process.pgen = process.pgen.copyAndExclude([process.genJetMET])
 
-    # Keep track of random number seeds
-    process.load('SLHCL1TrackTriggerSimulations.NTupleTools.randomEngineSeedKeeper_cfi')
-    process.pgen += process.randomEngineSeedKeeper
+        # Keep track of random number seeds
+        process.load('SLHCL1TrackTriggerSimulations.NTupleTools.randomEngineSeedKeeper_cfi')
+        process.pgen += process.randomEngineSeedKeeper
 
     # __________________________________________________________________________
     # Customise simulation step
 
-    # Remove sensitive detectors
-    for removee in ['MuonSD', 'CaloSD', 'CaloResponse', 'ECalSD', 'HCalSD', 'CaloTrkProcessing', 'HFShower', 'HFShowerLibrary', 'HFShowerPMT', 'HFShowerStraightBundle', 'HFShowerConicalBundle', 'HFGflash', 'CastorSD', 'CastorShowerLibrary', 'TotemSD', 'ZdcSD', 'ZdcShowerLibrary', 'FP420SD', 'BscSD', 'BHMSD', 'CFCSD', 'HGCSD', 'ShashlikSD', 'PltSD', 'HcalTB02SD', 'EcalTBH4BeamSD', 'HcalTB06BeamSD']:
-        if hasattr(process.g4SimHits, removee):
-            delattr(process.g4SimHits, removee)
+    if hasattr(process, "psim"):
+        # Remove sensitive detectors
+        for removee in ['MuonSD', 'CaloSD', 'CaloResponse', 'ECalSD', 'HCalSD', 'CaloTrkProcessing', 'HFShower', 'HFShowerLibrary', 'HFShowerPMT', 'HFShowerStraightBundle', 'HFShowerConicalBundle', 'HFGflash', 'CastorSD', 'CastorShowerLibrary', 'TotemSD', 'ZdcSD', 'ZdcShowerLibrary', 'FP420SD', 'BscSD', 'BHMSD', 'CFCSD', 'HGCSD', 'ShashlikSD', 'PltSD', 'HcalTB02SD', 'EcalTBH4BeamSD', 'HcalTB06BeamSD']:
+            if hasattr(process.g4SimHits, removee):
+                delattr(process.g4SimHits, removee)
 
-    # Kill delta rays
-    process.g4SimHits.StackingAction.KillDeltaRay = True
+        # Kill delta rays
+        process.g4SimHits.StackingAction.KillDeltaRay = True
 
+    # __________________________________________________________________________
     # Modify geometry
+
     geoms_orig = process.XMLIdealGeometryESSource.geomXMLFiles
     geoms_modified = []
     for geom in geoms_orig:
@@ -123,10 +127,13 @@ def cust_useTrackerOnly(process, intime=True, ntuple=True, keepSimHits=True):
     # Customise output steps
 
     if ntuple:
-        # Drop RAWSIM output
-        for removee in [process.genfiltersummary_step, process.endjob_step, process.RAWSIMoutput_step]:
-            if removee in process.schedule:
-                process.schedule.remove(removee)
+        # Drop RAWSIM output path
+        endPaths = []
+        for path in process.schedule:
+            if type(path) is cms.EndPath:
+                endPaths.append(path)
+        for path in endPaths:
+            process.schedule.remove(path)
 
         # Substitute with TFileService
         outputFileName = process.RAWSIMoutput.fileName._value
