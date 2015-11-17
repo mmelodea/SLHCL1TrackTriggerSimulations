@@ -60,9 +60,6 @@ float calcIdealZ(float simVz, float simCotTheta, float simChargeOverPt, float r)
 int StubCleanerPU::cleanStubs(TString src, TString out) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and cleaning them." << std::endl;
 
-    static const int good_tpId = 0;
-
-
     // _________________________________________________________________________
     // For reading
     TTStubReader reader(verbose_);
@@ -95,8 +92,7 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
 
         const unsigned nstubs = readerCache.vb_modId->size();
         const unsigned nparts = readerCache.vp_pt->size();
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Processing event   : %7lld, keeping: %7ld", ievt, nKept2) << std::endl;
-        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Processing particle: %7lld, keeping: %7ld", ievt, nKept1) << std::endl;
+        if (verbose_>1 && ievt%50000==0)  std::cout << Debug() << Form("... Processing event   : %7lld, keeping: %7ld (%7ld particles)", ievt, nKept2, nKept1) << std::endl;
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # stubs: " << nstubs << " # particles: " << nparts << std::endl;
 
         bool keepevent = false;
@@ -104,7 +100,38 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
         // Loop over genParticles
         for (unsigned ipart=0; ipart<nparts; ++ipart) {
 
-            // _____________________________________________________________________
+            // _________________________________________________________________
+            // Check sim info
+
+            float simPt           = readerCache.vp_pt->at(ipart);
+            float simEta          = readerCache.vp_eta->at(ipart);
+            float simPhi          = readerCache.vp_phi->at(ipart);
+            //float simVx           = readerCache.vp_vx->at(ipart);
+            //float simVy           = readerCache.vp_vy->at(ipart);
+            float simVz           = readerCache.vp_vz->at(ipart);
+            int   simCharge       = readerCache.vp_charge->at(ipart);
+            int   simPdgId        = readerCache.vp_pdgId->at(ipart);
+            int   simStatus       = readerCache.vp_status->at(ipart);
+
+            float simCotTheta     = std::sinh(simEta);
+            float simChargeOverPt = float(simCharge)/simPt;
+
+            // Apply charge and status requirements
+            bool sim = (simCharge != 0 && simStatus == 1);
+            if (!sim)
+                continue;
+
+            // Apply pt, eta, phi requirements
+            sim = (po_.minPt  <= simPt  && simPt  <= po_.maxPt  &&
+                   po_.minEta <= simEta && simEta <= po_.maxEta &&
+                   po_.minPhi <= simPhi && simPhi <= po_.maxPhi &&
+                   po_.minVz  <= simVz  && simVz  <= po_.maxVz);
+            if (!sim)
+                continue;
+
+            if (verbose_>2)  std::cout << Debug() << "... ... part: " << ipart << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " simVz: " << simVz << " simChargeOverPt: " << simChargeOverPt << " simPdgId: " << simPdgId << " simStatus: " << simStatus << std::endl;
+
+            // _________________________________________________________________
             // Start cleaning
 
             // Events that fail don't exit the loop immediately, so that event info
@@ -116,28 +143,6 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
             if (!require)
                 keep = false;
 
-            // Check sim info
-            float simPt           = readerCache.vp_pt->at(ipart);
-            float simEta          = readerCache.vp_eta->at(ipart);
-            float simPhi          = readerCache.vp_phi->at(ipart);
-            //float simVx           = readerCache.vp_vx->at(ipart);
-            //float simVy           = readerCache.vp_vy->at(ipart);
-            float simVz           = readerCache.vp_vz->at(ipart);
-            int   simCharge       = readerCache.vp_charge->at(ipart);
-
-            float simCotTheta     = std::sinh(simEta);
-            float simChargeOverPt = float(simCharge)/simPt;
-
-            // Apply pt, eta, phi requirements
-            bool sim = (po_.minPt  <= simPt  && simPt  <= po_.maxPt  &&
-                        po_.minEta <= simEta && simEta <= po_.maxEta &&
-                        po_.minPhi <= simPhi && simPhi <= po_.maxPhi &&
-                        po_.minVz  <= simVz  && simVz  <= po_.maxVz);
-            if (!sim)
-                keep = false;
-
-            if (verbose_>2)  std::cout << Debug() << "... ... part: " << ipart << " simPt: " << simPt << " simEta: " << simEta << " simPhi: " << simPhi << " simVz: " << simVz << " simChargeOverPt: " << simChargeOverPt << " keep? " << keep << std::endl;
-
             // _________________________________________________________________
             // Remove multiple stubs in one layer
 
@@ -146,9 +151,9 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
             std::vector<std::pair<unsigned, std::pair<unsigned, float> > > vec_index_dist;
 
             for (unsigned istub=0; (istub<nstubs) && keep; ++istub) {
-                int tpId = readerCache.vb_tpId->at(istub);  // check sim info
-                if (tpId != good_tpId)
-                    continue;
+                //int tpId = readerCache.vb_tpId->at(istub);
+                //if (tpId < 0)
+                //    continue;
 
                 unsigned moduleId = readerCache.vb_modId   ->at(istub);
                 float    stub_r   = readerCache.vb_r       ->at(istub);
@@ -167,9 +172,9 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
 
                 if (lay16 >= 6) {  // for endcap
                     idealR     = (stub_z - simVz) / simCotTheta;
-                    if (idealR <= 0) {
-                        std::cout << Warning() << "Stub ideal r <= 0! moduleId: " << moduleId << " r: " << stub_r << " z: " << stub_z << " simVz: " << simVz << " simCotTheta: " << simCotTheta << std::endl;
-                    }
+                    //if (idealR <= 0) {
+                    //    std::cout << Warning() << "Stub ideal r <= 0! moduleId: " << moduleId << " r: " << stub_r << " z: " << stub_z << " simVz: " << simVz << " simCotTheta: " << simCotTheta << std::endl;
+                    //}
                     idealPhi   = calcIdealPhi(simPhi, simChargeOverPt, idealR);
                     idealZ     = stub_z;
                 }
@@ -244,9 +249,9 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
                 if (!count)
                     keepstub = false;
 
-                if (verbose_>2)  std::cout << Debug() << "... ... ... stub: " << istub << " moduleId: " << moduleId << " keep stub? " << keepstub << std::endl;
-
                 if (keepstub) {
+                    if (verbose_>2)  std::cout << Debug() << "... ... ... stub: " << istub << " moduleId: " << moduleId << " is selected!" << std::endl;
+
                     // Keep the stub and do something similar to insertion sort
                     // First, find the position to insert (determined by moduleId)
                     std::vector<unsigned>::const_iterator pos = std::upper_bound(readerCache.vb_modId->begin(), readerCache.vb_modId->begin()+ngoodstubs, moduleId);
@@ -284,6 +289,8 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
                 insertSorted(reader.vp_vy->begin()        , ngoodparts, 0u, readerCache.vp_vy->at(ipart));
                 insertSorted(reader.vp_vz->begin()        , ngoodparts, 0u, readerCache.vp_vz->at(ipart));
                 insertSorted(reader.vp_charge->begin()    , ngoodparts, 0u, readerCache.vp_charge->at(ipart));
+                insertSorted(reader.vp_pdgId->begin()     , ngoodparts, 0u, readerCache.vp_pdgId->at(ipart));
+                insertSorted(reader.vp_status->begin()    , ngoodparts, 0u, readerCache.vp_status->at(ipart));
 
                 ++ngoodparts;
             }
@@ -332,6 +339,8 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
             reader.vp_vy        ->resize(ngoodparts);
             reader.vp_vz        ->resize(ngoodparts);
             reader.vp_charge    ->resize(ngoodparts);
+            reader.vp_pdgId     ->resize(ngoodparts);
+            reader.vp_status    ->resize(ngoodparts);
 
             ++nRead1;
             writer.fill();
@@ -359,11 +368,12 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
             reader.vp_vy        ->resize(nparts);
             reader.vp_vz        ->resize(nparts);
             reader.vp_charge    ->resize(nparts);
-
-            if (keepevent)
-                ++nKept2;
-
+            reader.vp_pdgId     ->resize(nparts);
+            reader.vp_status    ->resize(nparts);
         }  // end loop over genParticles
+
+        if (keepevent)
+            ++nKept2;
 
         ++nRead2;
     }  // end loop over events
