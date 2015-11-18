@@ -20,15 +20,31 @@ options.nevents = 500           # analyze first nevents
 options.threshold_nroads = 80   # analyze event if nroads > threshold (when event_list is empty)
 options.threshold_ntracks = 1   # analyze event if ntracks > threshold (when event_list is empty)
 
-#options.event_list = []
-options.event_list = [7, 43, 59, 152, 202, 221, 235, 375, 439,]
+options.event_list = []
+#options.event_list = [7, 43, 59, 152, 202, 221, 235, 375, 439,]
+
+options.use_color = True
 
 
 # ______________________________________________________________________________
 # Various printing/formatting functions
 
-def print_superstrips(superstripIdsA):
-    return " ".join(["%4i" % x for x in superstripIdsA])
+def apply_color(s):
+    lightred = '\033[91m'
+    lightgreen = '\033[92m'
+    end = '\033[0m'
+    s = lightgreen + s + end
+    return s
+
+def print_superstrips(superstripIdsA, stubRefsA):
+    s = ""
+    for x, y in izip(superstripIdsA, stubRefsA):
+        if options.use_color and y.size():
+            s += apply_color("%4i" % x)
+        else:
+            s += "%4i" % x
+        s += " "
+    return s
 
 def print_matching(stubRefsA):
     #return " ".join(["%1i" % x.size() for x in stubRefsA])
@@ -50,7 +66,7 @@ def print_matching_for_tracks(stubRefs):
     s = "[%1i/6]" % n
     return s
 
-def print_layered_superstrips(superstrips, d=4):
+def print_layered_superstrips(superstrips, superstrips_hit, d=4):
     formatter = lambda x: ("%"+str(d)+"i") % x
 
     strings = [""] * 6
@@ -59,7 +75,10 @@ def print_layered_superstrips(superstrips, d=4):
 
     for i, (layer, x) in enumerate(superstrips):
         assert(layer < 6)
-        strings[layer] += formatter(x)
+        if options.use_color and (layer, x) in superstrips_hit:
+            strings[layer] += apply_color(formatter(x))
+        else:
+            strings[layer] += formatter(x)
         strings[layer] += " "
 
     for layer, s in enumerate(strings):
@@ -212,13 +231,11 @@ def main():
         print("evt {0:3} -- Found {1:3} roads:".format(ievt, evt.AMTTRoads_patternRef.size()))
 
         superstrips = []
+        superstrips_hit = []
         stubs = []
 
         for iroad, (patternRef, patternInvPt, superstripIdsA, stubRefsA) in enumerate(
             izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_patternInvPt, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs)):
-
-            print("  road {0:3} patternRef: {1:8}, patternInvPt: {2: .3f}, ss: {3}, nMatched: {4}".format(
-                iroad, patternRef, patternInvPt, print_superstrips(superstripIdsA), print_matching(stubRefsA)))
 
             # Collect superstrips and stubs
             for isuperstrip, (superstripIdsB, stubRefsB) in enumerate(
@@ -229,19 +246,26 @@ def main():
                 if ss not in superstrips:
                     superstrips.append(ss)
 
-                for istub, (stubRefsC) in enumerate(izip(stubRefsB)):
+                if stubRefsB.size():
+                    if ss not in superstrips_hit:
+                        superstrips_hit.append(ss)
+
+                for istub, (stubRefsC) in enumerate(stubRefsB):
 
                     stub = (layer, stubRefsC)
                     if stub not in stubs:
                         stubs.append(stub)
 
+            print("  road {0:3} patternRef: {1:8}, patternInvPt: {2: .3f}, ss: {3}, nMatched: {4}".format(
+                iroad, patternRef, patternInvPt, print_superstrips(superstripIdsA, stubRefsA), print_matching(stubRefsA)))
+
         superstrips.sort()
         print("evt {0:3} -- Found {1:3} superstrips:".format(ievt, len(superstrips)))
-        print("  {0}".format(print_layered_superstrips(superstrips).replace("\n", "\n  ")))
+        print("  {0}".format(print_layered_superstrips(superstrips, superstrips_hit).replace("\n", "\n  ")))
 
         stubs.sort()
         print("evt {0:3} -- Found {1:3} stubs:".format(ievt, len(stubs)))
-        print("  {0}".format(print_layered_superstrips(stubs, d=5).replace("\n", "\n  ")))
+        print("  {0}".format(print_layered_superstrips(stubs, stubs, d=5).replace("\n", "\n  ")))
 
         # AM tracks
         tracks = select_tracks(evt)
