@@ -25,26 +25,17 @@ class MatrixBuilder {
         // Determine # of variables and # of parameters
         if (po.view == "XYZ") {
             view_ = XYZ;
-            nvariables_ = 6 * 2;
-            if (po.algo == "PCA4") {
-                nparameters_ = 4;
-            } else if (po.algo == "PCA5") {
-                nparameters_ = 5;
-            }
-
         } else if (po.view == "XY") {
             view_ = XY;
-            nvariables_ = 6;
-            if (po.algo == "PCA4") {
-                nparameters_ = 2;
-            } else if (po.algo == "PCA5") {
-                nparameters_ = 3;
-            }
-
         } else if (po.view == "RZ") {
             view_ = RZ;
-            nvariables_ = 6;
-            nparameters_ = 2;
+        }
+
+        nvariables_ = 12;
+        if (po.algo == "PCA4") {
+            nparameters_ = 4;
+        } else if (po.algo == "PCA5") {
+            nparameters_ = 5;
         }
 
         meansR_ = Eigen::VectorXd::Zero(6);

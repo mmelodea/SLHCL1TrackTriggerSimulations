@@ -60,20 +60,20 @@ int MatrixBuilder::bookHistograms() {
     histograms_["pc10"]   ->SetBins(1000, -25., 25.);
     histograms_["pc11"]   ->SetBins(1000, -50., 200.);
 
-    histograms_["par0"]   ->SetBins(1000, 0.6, 1.8);
-    histograms_["par1"]   ->SetBins(1000, -0.1, 0.9);
-    histograms_["par2"]   ->SetBins(1000, -25., 25.);
-    histograms_["par3"]   ->SetBins(1000, -0.6, 0.6);
+    histograms_["par0"]   ->SetBins(1000, -0.6, 0.6);
+    histograms_["par1"]   ->SetBins(1000, 0.6, 1.8);
+    histograms_["par2"]   ->SetBins(1000, -0.1, 0.9);
+    histograms_["par3"]   ->SetBins(1000, -25., 25.);
 
-    histograms_["fitpar0"]->SetBins(1000, 0.6, 1.8);
-    histograms_["fitpar1"]->SetBins(1000, -0.1, 0.9);
-    histograms_["fitpar2"]->SetBins(1000, -25., 25.);
-    histograms_["fitpar3"]->SetBins(1000, -0.6, 0.6);
+    histograms_["fitpar0"]->SetBins(1000, -0.6, 0.6);
+    histograms_["fitpar1"]->SetBins(1000, 0.6, 1.8);
+    histograms_["fitpar2"]->SetBins(1000, -0.1, 0.9);
+    histograms_["fitpar3"]->SetBins(1000, -25., 25.);
 
-    histograms_["errpar0"]->SetBins(1000, -0.005, 0.005);
-    histograms_["errpar1"]->SetBins(1000, -0.02, 0.02);
-    histograms_["errpar2"]->SetBins(1000, -0.5, 0.5);
-    histograms_["errpar3"]->SetBins(1000, -0.02, 0.02);
+    histograms_["errpar0"]->SetBins(1000, -0.02, 0.02);
+    histograms_["errpar1"]->SetBins(1000, -0.005, 0.005);
+    histograms_["errpar2"]->SetBins(1000, -0.02, 0.02);
+    histograms_["errpar3"]->SetBins(1000, -0.5, 0.5);
 
     return 0;
 }
@@ -225,9 +225,11 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
         unsigned ngoodstubs = 0;
         for (unsigned istub=0; istub<nstubs; ++istub) {
             unsigned moduleId = reader.vb_modId   ->at(istub);
-            if (ttrmap.find(moduleId) != ttrmap.end()) {
-                ++ngoodstubs;
-            }
+
+            //if (ttrmap.find(moduleId) != ttrmap.end()) {
+            //    ++ngoodstubs;
+            //}
+            ++ngoodstubs;
         }
         if (ngoodstubs != po_.nLayers) {
             ++nRead;
@@ -307,7 +309,7 @@ int MatrixBuilder::loopEventsAndFilter(TTStubReader& reader) {
     // _________________________________________________________________________
     // Loop again to reject outliers
 
-    const float sigma = 5.;
+    const float sigma = 4.;
     if (sigma >= 10.)
         return 0;
 
@@ -601,24 +603,60 @@ int MatrixBuilder::loopEventsAndSolveEigenvectors(TTStubReader& reader) {
         std::cout << covariances << std::endl << std::endl;
     }
 
-    // Find eigenvectors of covariance matrix
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
-    Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
-    for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
-        sqrtEigenvalues(ivar) = std::sqrt(std::max(0., eigensolver.eigenvalues()(ivar)));
+    if (view_ == XYZ) {
+        // Find eigenvectors of covariance matrix
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances);
+        Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
+        for (unsigned ivar=0; ivar<nvariables_; ++ivar) {
+            sqrtEigenvalues(ivar) = std::sqrt(std::max(0., eigensolver.eigenvalues()(ivar)));
+        }
+
+        // Find matrix V
+        // V is the orthogonal transformation from coordinates space to principal components space
+        // The principal components are constraints + rotated track parameters
+        Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+        V = (eigensolver.eigenvectors()).transpose();
+
+        setRotationToZero(V, nvariables_, po_.hitBits);
+
+        // Set PCAMatrix
+        mat_.sqrtEigenvalues = sqrtEigenvalues;
+        mat_.V = V;
+
+    } else if (view_ == XY || view_ == RZ) {
+        Eigen::MatrixXd covariances_xy = Eigen::MatrixXd::Zero(nvariables_/2, nvariables_/2);
+        if (view_ == XY) {
+            covariances_xy = covariances.topLeftCorner(nvariables_/2, nvariables_/2);
+        } else {
+            covariances_xy = covariances.bottomRightCorner(nvariables_/2, nvariables_/2);
+        }
+
+        // Find eigenvectors of covariance matrix
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(covariances_xy);
+        Eigen::VectorXd sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_/2);
+        for (unsigned ivar=0; ivar<nvariables_/2; ++ivar) {
+            sqrtEigenvalues(ivar) = std::sqrt(std::max(0., eigensolver.eigenvalues()(ivar)));
+        }
+
+        // Find matrix V
+        // V is the orthogonal transformation from coordinates space to principal components space
+        // The principal components are constraints + rotated track parameters
+        Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_/2, nvariables_/2);
+        V = (eigensolver.eigenvectors()).transpose();
+
+        setRotationToZero(V, nvariables_/2, po_.hitBits);
+
+        // Set PCAMatrix
+        mat_.sqrtEigenvalues = Eigen::VectorXd::Zero(nvariables_);
+        mat_.V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
+        if (view_ == XY) {
+            mat_.sqrtEigenvalues.head(nvariables_/2) = sqrtEigenvalues;
+            mat_.V.topLeftCorner(nvariables_/2, nvariables_/2) = V;
+        } else {
+            mat_.sqrtEigenvalues.tail(nvariables_/2) = sqrtEigenvalues;
+            mat_.V.bottomRightCorner(nvariables_/2, nvariables_/2) = V;
+        }
     }
-
-    // Find matrix V
-    // V is the orthogonal transformation from coordinates space to principal components space
-    // The principal components are constraints + rotated track parameters
-    Eigen::MatrixXd V = Eigen::MatrixXd::Zero(nvariables_, nvariables_);
-    V = (eigensolver.eigenvectors()).transpose();
-
-    setRotationToZero(V, nvariables_, po_.hitBits);
-
-    // Set PCA matrix
-    mat_.sqrtEigenvalues = sqrtEigenvalues;
-    mat_.V = V;
 
     if (verbose_>1) {
         std::cout << Info() << "sqrt(eigenvalues): " << std::endl;
@@ -690,10 +728,10 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         double simVz           = reader.vp_vz->front();
         {
             unsigned ipar = 0;
+            parameters(ipar++) = simChargeOverPt;
             parameters(ipar++) = simPhi;
             parameters(ipar++) = simCotTheta;
             parameters(ipar++) = simVz;
-            parameters(ipar++) = simChargeOverPt;
         }
 
         // Transform coordinates to principal components
@@ -742,18 +780,44 @@ int MatrixBuilder::loopEventsAndSolveD(TTStubReader& reader) {
         std::cout << covariancesPV << std::endl << std::endl;
     }
 
-    // Find matrix D
-    // D is the transformation from principal components to track parameters
-    Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
-    //D = covariancesPV * covariancesV.inverse();
-    D = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
+    if (view_ == XYZ) {
+        // Find matrix D
+        // D is the transformation from principal components to track parameters
+        Eigen::MatrixXd D = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
+        //D = covariancesPV * covariancesV.inverse();
+        D = (covariancesV.colPivHouseholderQr().solve(covariancesPV.transpose())).transpose();
 
-    Eigen::MatrixXd DV = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
-    DV = D * mat_.V;
+        // Set PCAMatrix
+        mat_.D = D;
+        mat_.DV = mat_.D * mat_.V;
 
-    // Set PCAMatrix
-    mat_.D = D;
-    mat_.DV = DV;
+    } else if (view_ == XY || view_ == RZ) {
+        Eigen::MatrixXd covariancesV_xy = Eigen::MatrixXd::Zero(nvariables_/2, nvariables_/2);
+        Eigen::MatrixXd covariancesPV_xy = Eigen::MatrixXd::Zero((nparameters_+1)/2, nvariables_/2);
+        if (view_ == XY) {
+            covariancesV_xy = covariancesV.topLeftCorner(nvariables_/2, nvariables_/2);
+            covariancesPV_xy = covariancesPV.topLeftCorner((nparameters_+1)/2, nvariables_/2);
+        } else {
+            covariancesV_xy = covariancesV.bottomRightCorner(nvariables_/2, nvariables_/2);
+            covariancesPV_xy = covariancesPV.bottomRightCorner(nparameters_/2, nvariables_/2);
+        }
+
+        // Find matrix D
+        // D is the transformation from principal components to track parameters
+        Eigen::MatrixXd D = Eigen::MatrixXd::Zero((nparameters_+1)/2, nvariables_/2);
+        //D = covariancesPV * covariancesV.inverse();
+        D = (covariancesV_xy.colPivHouseholderQr().solve(covariancesPV_xy.transpose())).transpose();
+
+        // Set PCAMatrix
+        mat_.D = Eigen::MatrixXd::Zero(nparameters_, nvariables_);
+        if (view_ == XY) {
+            mat_.D.topLeftCorner((nparameters_+1)/2, nvariables_/2) = D;
+            mat_.DV = mat_.D * mat_.V;
+        } else {
+            mat_.D.bottomRightCorner(nparameters_/2, nvariables_/2) = D;
+            mat_.DV = mat_.D * mat_.V;
+        }
+    }
 
     if (verbose_>1) {
         std::cout << Info() << "covariancesPV * covariancesV^{-1}: " << std::endl;
@@ -830,10 +894,10 @@ int MatrixBuilder::loopEventsAndEval(TTStubReader& reader) {
         double simVz           = reader.vp_vz->front();
         {
             unsigned ipar = 0;
+            parameters(ipar++) = simChargeOverPt;
             parameters(ipar++) = simPhi;
             parameters(ipar++) = simCotTheta;
             parameters(ipar++) = simVz;
-            parameters(ipar++) = simChargeOverPt;
         }
 
         // Transform coordinates to principal components

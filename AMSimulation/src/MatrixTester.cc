@@ -178,20 +178,20 @@ int MatrixTester::testMatrices(TString src) {
         //double simT = simCotTheta;
         {
             unsigned ipar = 0;
+            parameters.at(ipar++) = simChargeOverPt;
             parameters.at(ipar++) = simPhi;
             parameters.at(ipar++) = simCotTheta;
             parameters.at(ipar++) = simVz;
-            parameters.at(ipar++) = simChargeOverPt;
         }
 
         // _____________________________________________________________________
         // Get fit info
         {
             unsigned ipar = 0;
+            parameters_fit.at(ipar++) = atrack.invPt();
             parameters_fit.at(ipar++) = atrack.phi0();
             parameters_fit.at(ipar++) = atrack.cottheta();
             parameters_fit.at(ipar++) = atrack.z0();
-            parameters_fit.at(ipar++) = atrack.invPt();
 
             assert(atrack.principals().size() == nvariables_);
             principals = atrack.principals();

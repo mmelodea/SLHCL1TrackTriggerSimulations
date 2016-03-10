@@ -81,7 +81,7 @@ int TrackFitterAlgoPCA::fit(const TTRoadComb& acomb, TTTrack2& atrack) {
 
     //void setTrackParams(float rinv, float phi0, float cottheta, float z0, float d0,
     //                    float chi2, int ndof, float chi2_phi, float chi2_z)
-    atrack.setTrackParams(0.003 * 3.8 * parameters_fit(3), parameters_fit(0), parameters_fit(1), parameters_fit(2), 0.,
+    atrack.setTrackParams(0.003 * 3.8 * parameters_fit(0), parameters_fit(1), parameters_fit(2), parameters_fit(3), 0.,
                           chi2, ndof, 0., 0.);
 
     std::vector<float> principals_vec;
