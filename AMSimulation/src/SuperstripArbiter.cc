@@ -46,7 +46,10 @@ SuperstripArbiter::SuperstripArbiter()
   projective_max_nx_(0),
   fountain_sf_(0.),
   fountain_nz_(0),
-  fountain_max_nx_(0) {
+  fountain_max_nx_(0),
+  optimized_sf_(0.),
+  optimized_nz_(0),
+  optimized_max_nx_(0) {
 
     // phiWidths for 6 barrel layer [0..5], 5 +z endcap disks [6..10], 5 -z endcap disks [11..15]
     // CUIDADO: dummy values are used for the endcap layers
@@ -56,6 +59,13 @@ SuperstripArbiter::SuperstripArbiter()
         9.99999, 9.99999, 9.99999, 9.99999, 9.99999
     };
     assert(phiWidths_.size() == 16);
+
+    optimizedPhiWidths_ = {
+        1.05E-02, 5.02E-03, 3.92E-03, 3.14E-03, 2.91E-03, 5.92E-03,
+        9.99999, 9.99999, 9.99999, 9.99999, 9.99999,
+        9.99999, 9.99999, 9.99999, 9.99999, 9.99999
+    };
+    assert(optimizedPhiWidths_.size() == 16);
 
     // Average radii [cm] in the 6 barrel layers
     rMeans_ = {
@@ -97,6 +107,8 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
             sstype_ = SuperstripType::PROJECTIVE;
         } else if (token1 == "sf") {
             sstype_ = SuperstripType::FOUNTAIN;
+        } else if (token1 == "so") {
+            sstype_ = SuperstripType::OPTIMIZED;
         } else {
             throw std::invalid_argument("Incorrect superstrip definition.");
         }
@@ -150,6 +162,15 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 
             if (fountain_sf_ <= 0. || fountain_nz_ == 0)
                 throw std::invalid_argument("Incorrect fountain superstrip definition.");
+            break;
+
+        case SuperstripType::OPTIMIZED:
+            optimized_sf_    = token2f;
+            optimized_nz_    = token4f;
+            useGlobalCoord_ = true;
+
+            if (optimized_sf_ <= 0. || optimized_nz_ == 0)
+                throw std::invalid_argument("Incorrect optimized superstrip definition.");
             break;
 
         case SuperstripType::UNKNOWN:
@@ -255,6 +276,24 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
         nsuperstripsPerLayer_ = fountain_max_nx_ * fountain_nz_;
         break;
 
+    case SuperstripType::OPTIMIZED:
+        optimized_phiBins_.clear();
+        optimized_zBins_.clear();
+
+        optimized_phiBins_.resize(16);
+        optimized_zBins_.resize(16);
+
+        for (unsigned i=0; i<phiMins_.size(); ++i) {
+            optimized_phiBins_.at(i) = optimizedPhiWidths_.at(i) * optimized_sf_;
+            optimized_zBins_  .at(i) = (zMaxs_.at(i) - zMins_.at(i)) / optimized_nz_;
+
+            unsigned nx = round_to_uint((phiMaxs_.at(i) - phiMins_.at(i)) / optimized_phiBins_.at(i));
+            if (optimized_max_nx_ < nx)
+                optimized_max_nx_ = nx;
+        }
+        nsuperstripsPerLayer_ = optimized_max_nx_ * optimized_nz_;
+        break;
+
     default:
         break;
     }
@@ -283,6 +322,10 @@ unsigned SuperstripArbiter::superstripGlobal(unsigned moduleId, float r, float p
 
     case SuperstripType::FOUNTAIN:
         return superstripFountain(moduleId, r, phi, z, ds);
+        break;
+
+    case SuperstripType::OPTIMIZED:
+        return superstripOptimized(moduleId, r, phi, z, ds);
         break;
 
     default:
@@ -371,6 +414,27 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float
 }
 
 // _____________________________________________________________________________
+unsigned SuperstripArbiter::superstripOptimized(unsigned moduleId, float r, float phi, float z, float ds) const {
+    unsigned lay16    = compressLayer(decodeLayer(moduleId));
+
+    // For barrel, correct phi based on ds and dr
+    //if (lay16 < 6)
+    //    phi = phi + drCorrs_.at(lay16) * ds * (r - rMeans_.at(lay16));
+
+    int n_phi = optimized_max_nx_;
+    int n_z   = optimized_nz_;
+
+    int i_phi = std::floor((phi - phiMins_.at(lay16)) / optimized_phiBins_.at(lay16));
+    int i_z   = std::floor((z - zMins_.at(lay16)) / optimized_zBins_.at(lay16));
+
+    i_phi     = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
+    i_z       = (i_z   < 0) ? 0 : (i_z   >= n_z  ) ? (n_z   - 1) : i_z;    // proper range
+
+    unsigned ss = i_z * n_phi + i_phi;
+    return ss;
+}
+
+// _____________________________________________________________________________
 void SuperstripArbiter::print() {
     switch (sstype_) {
     case SuperstripType::FIXEDWIDTH:
@@ -395,6 +459,15 @@ void SuperstripArbiter::print() {
                   << "," << fountain_phiBins_.at(3) << "," << fountain_phiBins_.at(4) << "," << fountain_phiBins_.at(5)
                   << ", z bins: " << fountain_zBins_.at(0) << "," << fountain_zBins_.at(1) << "," << fountain_zBins_.at(2)
                   << "," << fountain_zBins_.at(3) << "," << fountain_zBins_.at(4) << "," << fountain_zBins_.at(5)
+                  << ", nsuperstrips per layer: " << nsuperstripsPerLayer_ << std::endl;
+        break;
+
+    case SuperstripType::OPTIMIZED:
+        std::cout << "Using optimized superstrip with sf: " << optimized_sf_ << ", nz: " << optimized_nz_
+                  << ", phi bins: " << optimized_phiBins_.at(0) << "," << optimized_phiBins_.at(1) << "," << optimized_phiBins_.at(2)
+                  << "," << optimized_phiBins_.at(3) << "," << optimized_phiBins_.at(4) << "," << optimized_phiBins_.at(5)
+                  << ", z bins: " << optimized_zBins_.at(0) << "," << optimized_zBins_.at(1) << "," << optimized_zBins_.at(2)
+                  << "," << optimized_zBins_.at(3) << "," << optimized_zBins_.at(4) << "," << optimized_zBins_.at(5)
                   << ", nsuperstrips per layer: " << nsuperstripsPerLayer_ << std::endl;
         break;
 

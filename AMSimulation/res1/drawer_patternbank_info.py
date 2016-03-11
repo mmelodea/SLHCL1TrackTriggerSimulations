@@ -14,8 +14,11 @@ def drawer_book():
 
     for bank in options.banks:
         m = re.search("(sf.+?_nz.+?)_\w", bank)
+        n = re.search("(so.+?_nz.+?)_\w", bank)
         if m:
             ss = m.group(1)
+        elif n:
+            ss = n.group(1)
         else:
             raise "Failed to find the superstrip definition from filename"
 
@@ -93,6 +96,11 @@ def parse_ss(ss):
     elif "sf" in ss:
         ss = ss.replace("sf", "sf=").replace("_nz", ",nz=")
         ss = ss.replace("0p", "0.")
+        ss = ss.replace("1p", "1.")
+    elif "so" in ss:
+        ss = ss.replace("so", "so=").replace("_nz", ",nz=")
+        ss = ss.replace("0p", "0.")
+        ss = ss.replace("1p", "1.")
     ss = ss.replace("_", " ")
     return ss
 
