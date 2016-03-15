@@ -15,6 +15,13 @@ fcol = TColor.GetColor("#fb9a99")  # nu140
 
 
 # ______________________________________________________________________________
+def getHitBits(stubRefs):
+    for i in xrange(6):
+        if stubRefs.at(i).size() == 0:
+            return i + 1
+    return 0
+
+# ______________________________________________________________________________
 def drawer_book(options):
     histos = {}
 
@@ -59,6 +66,53 @@ def drawer_book(options):
         #nbins, xmin, xmax = 20, 0., 20.
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX" , nbins, xmin, xmax)
 
+    hname = "road_hitbits"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+
+    hname = "combination_hitbits"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; combination hitbits" , nbins, xmin, xmax)
+
+    hname = "nsiblings_per_event"
+    nbins, xmin, xmax = 50, 0., 50.
+    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
+
+    hname = "nfamilies_per_event"
+    nbins, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # families/tower/BX"             , nbins, xmin, xmax)
+    hname = "nfamilies_sib1_per_event"
+    nbins, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # families/tower/BX"             , nbins, xmin, xmax)
+    hname = "nfamilies_sib2_per_event"
+    nbins, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # families/tower/BX"             , nbins, xmin, xmax)
+
+    hname = "road_hitbits_thesibling"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_7"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_6"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_5"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_4"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_3"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_2"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_nsiblings_1"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+
     # Style
     for hname, h in histos.iteritems():
         h.SetLineWidth(2); h.SetMarkerSize(0)
@@ -66,6 +120,11 @@ def drawer_book(options):
         if h.ClassName() == "TH1F":
             binwidth = (h.GetXaxis().GetXmax() - h.GetXaxis().GetXmin())/h.GetNbinsX()
             h.SetYTitle("Entries / %.1f" % binwidth)
+
+            if "road_hitbits" in hname or "combination_hitbits" in hname:
+                h.logy = False
+            else:
+                h.logy = True
     donotdelete.append(histos)
     return histos
 
@@ -114,6 +173,9 @@ def drawer_project(tree, histos, options):
                 #assert(nsuperstrips_per_road == 6)
                 histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
+                road_hitbits = getHitBits(stubRefs)
+                histos["road_hitbits"].Fill(road_hitbits)
+
                 nstubs_per_road = 0
                 ncombinations_per_road = 1
 
@@ -131,6 +193,8 @@ def drawer_project(tree, histos, options):
 
                 histos["ncombinations_per_road"].Fill(ncombinations_per_road)
 
+                histos["combination_hitbits"].Fill(road_hitbits, ncombinations_per_road)
+
                 nroads_per_event += 1
                 ncombinations_per_event += ncombinations_per_road
 
@@ -142,13 +206,126 @@ def drawer_project(tree, histos, options):
 
         histos["ncombinations_per_event"].Fill(ncombinations_per_event)
 
+
+        # Stupid clustering algorithm
+        def is_sibling(isuperstripIds, jsuperstripIds):
+            count = 0
+            for i, j in izip(isuperstripIds, jsuperstripIds):
+                if i != j:
+                    count += 1
+            if count == 0:
+                print "ERROR: isuperstripIds == jsuperstripIds"
+            return count <= 1
+
+        # Pythonify
+        roads_superstripIds = []
+        roads_superstripIds_include = []
+        roads_hitBits = []
+
+        for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
+            if tower == options.tower and patternRef < options.npatterns:
+                roads_superstripIds.append([])
+                roads_superstripIds_include.append(True)
+                roads_hitBits.append(getHitBits(stubRefs))
+
+                for ssid, ssid_stubRefs in izip(superstripIds, stubRefs):
+                    roads_superstripIds[-1].append(ssid)
+
+        # Verbose
+        #for iroad in xrange(len(roads_superstripIds)):
+        #    print iroad, roads_superstripIds[iroad], roads_hitBits[iroad]
+
+        # Build family
+        roads_family = []
+        k = 0
+        while sum(roads_superstripIds_include) > 0:
+            most_popular_iroad = -1
+            most_popular_iroad_siblings = []
+
+            for iroad in xrange(len(roads_superstripIds)):
+                if not roads_superstripIds_include[iroad]: continue
+
+                siblings = []
+
+                for jroad in xrange(len(roads_superstripIds)):
+                    if iroad == jroad:  continue
+                    if not roads_superstripIds_include[jroad]: continue
+
+                    if is_sibling(roads_superstripIds[iroad], roads_superstripIds[jroad]):
+                        siblings.append(jroad)
+
+                if most_popular_iroad == -1 or len(siblings) > len(most_popular_iroad_siblings):
+                    most_popular_iroad = iroad
+                    most_popular_iroad_siblings = siblings
+
+            roads_family.append((most_popular_iroad, most_popular_iroad_siblings))
+            roads_superstripIds_include[most_popular_iroad] = False
+            for jroad in most_popular_iroad_siblings:
+                roads_superstripIds_include[jroad] = False
+
+            k += 1
+
+        # Verbose
+        #for kroad in xrange(len(roads_family)):
+        #    print kroad, roads_family[kroad]
+        print "Number of families: %i" % (len(roads_family))
+        nsiblings = [len(k[1]) for k in roads_family[:3]]
+        nsiblings += [-1, -1, -1]
+        print "Number of siblings (most to least): %i, %i, %i, ..." % (nsiblings[0], nsiblings[1], nsiblings[2])
+
+        # Check
+        check_nroads = 0
+        for kroad in xrange(len(roads_family)):
+            check_nroads += 1
+            check_nroads += len(roads_family[kroad][1])
+        assert(check_nroads == len(roads_superstripIds))
+
+        # Plot
+        nfamilies = len(roads_family)
+        histos["nfamilies_per_event"].Fill(nfamilies)
+
+        nfamilies_sib1 = 0
+        nfamilies_sib2 = 0
+        for kroad in xrange(nfamilies):
+            nsiblings = len(roads_family[kroad][1])
+            if nsiblings > 0:
+                nfamilies_sib1 += 1
+            if nsiblings > 1:
+                nfamilies_sib2 += 1
+        histos["nfamilies_sib1_per_event"].Fill(nfamilies_sib1)
+        histos["nfamilies_sib2_per_event"].Fill(nfamilies_sib2)
+
+        for kroad in xrange(nfamilies):
+            nsiblings = len(roads_family[kroad][1])
+            histos["nsiblings_per_event"].Fill(nsiblings)
+
+            sroad = roads_family[kroad][0]
+            road_hitbits = roads_hitBits[sroad]
+            histos["road_hitbits_thesibling"].Fill(road_hitbits)
+
+            for sroad in roads_family[kroad][1]:
+                road_hitbits = roads_hitBits[sroad]
+
+                if nsiblings == 7:
+                    histos["road_hitbits_nsiblings_7"].Fill(road_hitbits)
+                elif nsiblings == 6:
+                    histos["road_hitbits_nsiblings_6"].Fill(road_hitbits)
+                elif nsiblings == 5:
+                    histos["road_hitbits_nsiblings_5"].Fill(road_hitbits)
+                elif nsiblings == 4:
+                    histos["road_hitbits_nsiblings_4"].Fill(road_hitbits)
+                elif nsiblings == 3:
+                    histos["road_hitbits_nsiblings_3"].Fill(road_hitbits)
+                elif nsiblings == 2:
+                    histos["road_hitbits_nsiblings_2"].Fill(road_hitbits)
+                elif nsiblings == 1:
+                    histos["road_hitbits_nsiblings_1"].Fill(road_hitbits)
+
     tree.SetBranchStatus("*", 1)
     return
 
 
 def drawer_draw(histos, options):
-    options.logy = True
-
     def parse_ss(ss):
         if "lu" in ss:
             ss = ss.replace("lu", "")
@@ -186,28 +363,24 @@ def drawer_draw(histos, options):
         hquantile = h.Clone(h.GetName() + "_quantile")
         hquantile.Reset()
         hquantile.SetYTitle("Percentile of entries #geq x-value")
-        integral = 0
         for i in xrange(h.GetNbinsX(), 0, -1):
             if i == h.GetNbinsX():
                 hquantile.SetBinContent(i, h.GetBinContent(i))
             else:
                 hquantile.SetBinContent(i, hquantile.GetBinContent(i+1)+h.GetBinContent(i))
-            integral += h.GetBinContent(i)
-
-            print i, hquantile.GetBinCenter(i), integral, hquantile.GetBinContent(i)
-        hquantile.Scale(1.0/integral)
+        hquantile.Scale(1.0/h.GetBinContent(1))
         return hquantile
 
     for hname, h in histos.iteritems():
         if "per_layer" in hname:
             continue
 
-        if options.logy:
+        if h.logy:
             h.SetMaximum(h.GetMaximum() * 14); h.SetMinimum(0.5)
         else:
             h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0.)
         h.SetStats(1); h.Draw("hist")
-        gPad.SetLogy(options.logy)
+        gPad.SetLogy(h.logy)
         ps = display_quantiles(h)
 
         tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
@@ -224,7 +397,6 @@ def drawer_draw(histos, options):
             tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
             CMS_label()
             save(options.outdir, "%s_%s" % (hquantile.GetName(), options.ss), dot_root=True)
-            gPad.SetLogy(options.logy)
 
     # Specialized: nstubs_per_layer_%i plots
     if True:
@@ -282,12 +454,12 @@ def drawer_draw(histos, options):
             if ymax == -1:
                 ymax = h.GetMaximum()
 
-            if options.logy:
+            if h.logy:
                 h.SetMaximum(ymax * 14); h.SetMinimum(0.5)
             else:
                 h.SetMaximum(ymax * 1.4); h.SetMinimum(0.)
             h.SetStats(1); h.Draw("hist")
-            gPad.SetLogy(options.logy)
+            gPad.SetLogy(h.logy)
             display_quantiles(h, scalebox=(2.,2.))
 
             tlatex.DrawLatex(0.5, 0.260, "Layer %i" % i)
