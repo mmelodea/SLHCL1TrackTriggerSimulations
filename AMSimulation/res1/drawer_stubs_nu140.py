@@ -137,9 +137,34 @@ def drawer_project(tree, histos, options):
 
 
 def drawer_draw(histos, options):
+    def display_quantiles(h, in_quantiles=[0.95,0.99], scalebox=(1.,1.)):
+        # Display one-sided confidence intervals, a.k.a quantiles
+        n = len(in_quantiles)
+        in_quantiles = array('d', in_quantiles)
+        quantiles = array('d', [0. for i in xrange(n)])
+        h.GetQuantiles(n, quantiles, in_quantiles)
+
+        gPad.Modified(); gPad.Update()
+        ps = h.FindObject("stats")
+        ps.SetName("mystats")
+
+        newX1NDC = ps.GetX2NDC() - (ps.GetX2NDC() - ps.GetX1NDC()) * scalebox[0]
+        newY1NDC = ps.GetY2NDC() - ((ps.GetY2NDC() - ps.GetY1NDC()) / 5 * (5 + n)) * scalebox[1]
+        ps.SetX1NDC(newX1NDC)
+        ps.SetY1NDC(newY1NDC)
+
+        for iq, q in enumerate(in_quantiles):
+            ps.AddText("%i%% CI = %6.4g" % (int(q*100), quantiles[iq]))
+        h.stats = [h.GetMean()] + quantiles.tolist()
+
+        h.SetStats(0)
+        #gPad.Modified(); gPad.Update()
+        ps.Draw()
+
     for hname, h in histos.iteritems():
         h.SetMaximum(h.GetMaximum() * 1.4); h.SetMinimum(0)
         h.Draw("hist")
+        display_quantiles(h)
 
         if hname == "nconnections":
             h.SetMarkerSize(1.5)
