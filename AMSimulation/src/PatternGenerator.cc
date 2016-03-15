@@ -277,7 +277,12 @@ int PatternGenerator::writePatterns(TString out) {
     assert(npatterns == nentries);
     assert(coverage_count_ == nKept);
 
-    if (verbose_)  std::cout << Info() << "After sorting by frequency, N(90% cov)=" << n90 << ", N(95% cov)=" << n95 << ", N(99% cov)=" << n99 << std::endl;
+    if (verbose_)  {
+        std::cout << Info() << "After sorting by frequency: " << std::endl;
+        std::cout << Info() << " N(90% cov) = " << n90 << "\tPopularity = " << patternBank_pairs_.at(n90).second << std::endl;
+        std::cout << Info() << " N(95% cov) = " << n95 << "\tPopularity = " << patternBank_pairs_.at(n95).second << std::endl;
+        std::cout << Info() << " N(99% cov) = " << n99 << "\tPopularity = " << patternBank_pairs_.at(n99).second << std::endl;
+    }
 
     return 0;
 }
