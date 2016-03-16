@@ -18,6 +18,21 @@ connectmap = json.load(open("../data/module_connections.json"), object_pairs_hoo
 
 
 # ______________________________________________________________________________
+def get_ds_cuts(ds):
+    if ds == 0:
+        # Default
+        return [0, 2.5, 2.5, 3.0, 4.5, 5.5, 6.5]
+    if ds == 1:
+        # Default
+        return [0, 2.5, 2.5, 3.0, 4.5, 5.5, 6.5]
+    if ds == 2:
+        # Taken from https://github.com/sviret/HL_LHC/blob/master/DataProduction/test/base/2GevTune.txt
+        return [0, 2.0, 2.0, 2.5, 4.0, 5.5, 6.5]
+    if ds == 3:
+        # Taken from https://github.com/sviret/HL_LHC/blob/master/DataProduction/test/base/3GevTune.txt
+        return [0, 1.5, 1.5, 2.0, 3.0, 3.5, 4.5]
+
+# ______________________________________________________________________________
 def drawer_book():
     histos = {}
 
@@ -77,10 +92,15 @@ def drawer_project(tree, histos, options):
     tree.SetBranchStatus("trkParts_charge" , 1)
     tree.SetBranchStatus("trkParts_primary", 1)
     tree.SetBranchStatus("TTStubs_modId"   , 1)
+    tree.SetBranchStatus("TTStubs_trigBend", 1)
 
     moduleIds_tt = set()
     for moduleId in ttmap[options.tower]:
         moduleIds_tt.add(moduleId)
+
+    # Delta_s cuts
+    dscuts = get_ds_cuts(3)
+    dscuts = dscuts[1:]
 
     # Loop over events
     for ievt, evt in enumerate(tree):
@@ -110,11 +130,15 @@ def drawer_project(tree, histos, options):
         # nstubs
         lay_map = {}
 
-        for istub, moduleId in enumerate(evt.TTStubs_modId):
+        for istub, (moduleId, ds) in enumerate(izip(evt.TTStubs_modId, evt.TTStubs_trigBend)):
             if moduleId not in moduleIds_tt:
                 continue
 
             lay = decodeLayer(moduleId)
+
+            if lay-5 < len(dscuts) and not (abs(ds) <= dscuts[lay-5]):
+                continue
+
             lay_map[istub] = lay
 
         hname = "nstubs_per_layer_%i" % 99

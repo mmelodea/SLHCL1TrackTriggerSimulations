@@ -110,7 +110,7 @@ def drawer_project(tree, histos, options):
         for moduleId, ds in izip(evt.TTStubs_modId, evt.TTStubs_trigBend):
             lay = decodeLayer(moduleId)
 
-            if lay-5 < len(dscuts) and not (ds <= dscuts[lay-5]):
+            if lay-5 < len(dscuts) and not (abs(ds) <= dscuts[lay-5]):
                 continue
 
             counts_layer[lay-5] = counts_layer.get(lay-5, 0) + 1
