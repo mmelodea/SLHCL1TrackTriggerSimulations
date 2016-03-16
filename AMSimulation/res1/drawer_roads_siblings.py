@@ -66,17 +66,6 @@ def drawer_book(options):
         #nbins, xmin, xmax = 20, 0., 20.
         histos[hname] = TH1F(hname, "; # stubs/layer/road/tower/BX" , nbins, xmin, xmax)
 
-    hname = "road_hitbits"
-    nbins, xmin, xmax = 10, 0, 10.
-    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-
-    hname = "combination_hitbits"
-    nbins, xmin, xmax = 10, 0, 10.
-    histos[hname] = TH1F(hname, "; combination hitbits" , nbins, xmin, xmax)
-
-    hname = "nsiblings_per_event"
-    nbins, xmin, xmax = 50, 0., 50.
-    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
 
     hname = "nfamilies_per_event"
     nbins, xmin, xmax = 100, 0., 100.
@@ -87,31 +76,101 @@ def drawer_book(options):
     hname = "nfamilies_sib2_per_event"
     nbins, xmin, xmax = 100, 0., 100.
     histos[hname] = TH1F(hname, "; # families/tower/BX"             , nbins, xmin, xmax)
+    hname = "nfamilies_sib3_per_event"
+    nbins, xmin, xmax = 100, 0., 100.
+    histos[hname] = TH1F(hname, "; # families/tower/BX"             , nbins, xmin, xmax)
 
-    hname = "road_hitbits_thesibling"
+    hname = "nsiblings_per_event"
+    nbins, xmin, xmax = 20, 0., 20.
+    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
+    hname = "nsiblings_fam0_per_event"
+    nbins, xmin, xmax = 20, 0., 20.
+    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
+    hname = "nsiblings_fam1_per_event"
+    nbins, xmin, xmax = 20, 0., 20.
+    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
+    hname = "nsiblings_fam2_per_event"
+    nbins, xmin, xmax = 20, 0., 20.
+    histos[hname] = TH1F(hname, "; # siblings/tower/BX"             , nbins, xmin, xmax)
+
+    hname = "road_hitbits_eldest_sib0"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_7"
+    hname = "road_hitbits_eldest_sib1"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_6"
+    hname = "road_hitbits_eldest_sib2"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_5"
+    hname = "road_hitbits_eldest_sib3"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_4"
+    hname = "road_hitbits_eldest_sib4"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_3"
+    hname = "road_hitbits_eldest_sib5"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_2"
+    hname = "road_hitbits_eldest_sib6"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
-    hname = "road_hitbits_nsiblings_1"
+    hname = "road_hitbits_eldest_sib7"
     nbins, xmin, xmax = 10, 0, 10.
     histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+
+    hname = "road_hitbits_sibling_sib0"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib1"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib2"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib3"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib4"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib5"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib6"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+    hname = "road_hitbits_sibling_sib7"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road hitbits" , nbins, xmin, xmax)
+
+    hname = "road_diff_sibling_sib0"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib1"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib2"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib3"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib4"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib5"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib6"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+    hname = "road_diff_sibling_sib7"
+    nbins, xmin, xmax = 10, 0, 10.
+    histos[hname] = TH1F(hname, "; road diff" , nbins, xmin, xmax)
+
+    hname = "nroads_vs_nfamilies"
+    hname = "ntrkparticles_vs_nfamilies"
+
 
     # Style
     for hname, h in histos.iteritems():
@@ -121,7 +180,7 @@ def drawer_book(options):
             binwidth = (h.GetXaxis().GetXmax() - h.GetXaxis().GetXmin())/h.GetNbinsX()
             h.SetYTitle("Entries / %.1f" % binwidth)
 
-            if "road_hitbits" in hname or "combination_hitbits" in hname:
+            if "road_hitbits" in hname or "road_diff" in hname:
                 h.logy = False
             else:
                 h.logy = True
@@ -173,9 +232,6 @@ def drawer_project(tree, histos, options):
                 #assert(nsuperstrips_per_road == 6)
                 histos["nsuperstrips_per_road"].Fill(nsuperstrips_per_road)
 
-                road_hitbits = getHitBits(stubRefs)
-                histos["road_hitbits"].Fill(road_hitbits)
-
                 nstubs_per_road = 0
                 ncombinations_per_road = 1
 
@@ -193,8 +249,6 @@ def drawer_project(tree, histos, options):
 
                 histos["ncombinations_per_road"].Fill(ncombinations_per_road)
 
-                histos["combination_hitbits"].Fill(road_hitbits, ncombinations_per_road)
-
                 nroads_per_event += 1
                 ncombinations_per_event += ncombinations_per_road
 
@@ -207,119 +261,169 @@ def drawer_project(tree, histos, options):
         histos["ncombinations_per_event"].Fill(ncombinations_per_event)
 
 
-        # Stupid clustering algorithm
-        def is_sibling(isuperstripIds, jsuperstripIds):
-            count = 0
-            for i, j in izip(isuperstripIds, jsuperstripIds):
-                if i != j:
-                    count += 1
-            if count == 0:
-                print "ERROR: isuperstripIds == jsuperstripIds"
-            return count <= 1
+        # ______________________________________________________________________
+        make_family = True
+        if make_family and nroads_per_event > 50.:
+            # Stupid clustering algorithm
+            def is_sibling(isuperstripIds, jsuperstripIds):
+                count = 0
+                for i, j in izip(isuperstripIds, jsuperstripIds):
+                    if i != j:
+                        count += 1
+                if count == 0:
+                    print "ERROR: isuperstripIds == jsuperstripIds"
+                return count <= 1
 
-        # Pythonify
-        roads_superstripIds = []
-        roads_superstripIds_include = []
-        roads_hitBits = []
+            def diff_sibling(isuperstripIds, jsuperstripIds):
+                l = 0
+                for i, j in izip(isuperstripIds, jsuperstripIds):
+                    l += 1
+                    if i != j:
+                        return l
+                return l
 
-        for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
-            if tower == options.tower and patternRef < options.npatterns:
-                roads_superstripIds.append([])
-                roads_superstripIds_include.append(True)
-                roads_hitBits.append(getHitBits(stubRefs))
+            # Pythonify
+            roads_superstripIds = []
+            roads_superstripIds_include = []
+            roads_hitBits = []
 
-                for ssid, ssid_stubRefs in izip(superstripIds, stubRefs):
-                    roads_superstripIds[-1].append(ssid)
+            for patternRef, tower, nstubs, superstripIds, stubRefs in izip(evt.AMTTRoads_patternRef, evt.AMTTRoads_tower, evt.AMTTRoads_nstubs, evt.AMTTRoads_superstripIds, evt.AMTTRoads_stubRefs):
+                if tower == options.tower and patternRef < options.npatterns:
+                    roads_superstripIds.append([])
+                    roads_superstripIds_include.append(True)
+                    roads_hitBits.append(getHitBits(stubRefs))
 
-        # Verbose
-        #for iroad in xrange(len(roads_superstripIds)):
-        #    print iroad, roads_superstripIds[iroad], roads_hitBits[iroad]
+                    for ssid, ssid_stubRefs in izip(superstripIds, stubRefs):
+                        roads_superstripIds[-1].append(ssid)
 
-        # Build family
-        roads_family = []
-        k = 0
-        while sum(roads_superstripIds_include) > 0:
-            most_popular_iroad = -1
-            most_popular_iroad_siblings = []
+            # Verbose
+            #for iroad in xrange(len(roads_superstripIds)):
+            #    print iroad, roads_superstripIds[iroad], roads_hitBits[iroad]
 
-            for iroad in xrange(len(roads_superstripIds)):
-                if not roads_superstripIds_include[iroad]: continue
+            # Build family
+            roads_family = []
+            k = 0
+            while sum(roads_superstripIds_include) > 0:
+                most_popular_iroad = -1
+                most_popular_iroad_siblings = []
 
-                siblings = []
+                for iroad in xrange(len(roads_superstripIds)):
+                    if not roads_superstripIds_include[iroad]: continue
 
-                for jroad in xrange(len(roads_superstripIds)):
-                    if iroad == jroad:  continue
-                    if not roads_superstripIds_include[jroad]: continue
+                    siblings = []
 
-                    if is_sibling(roads_superstripIds[iroad], roads_superstripIds[jroad]):
-                        siblings.append(jroad)
+                    for jroad in xrange(len(roads_superstripIds)):
+                        if iroad == jroad:  continue
+                        if not roads_superstripIds_include[jroad]: continue
 
-                if most_popular_iroad == -1 or len(siblings) > len(most_popular_iroad_siblings):
-                    most_popular_iroad = iroad
-                    most_popular_iroad_siblings = siblings
+                        if is_sibling(roads_superstripIds[iroad], roads_superstripIds[jroad]):
+                            siblings.append(jroad)
 
-            roads_family.append((most_popular_iroad, most_popular_iroad_siblings))
-            roads_superstripIds_include[most_popular_iroad] = False
-            for jroad in most_popular_iroad_siblings:
-                roads_superstripIds_include[jroad] = False
+                    if most_popular_iroad == -1 or len(siblings) > len(most_popular_iroad_siblings):
+                        most_popular_iroad = iroad
+                        most_popular_iroad_siblings = siblings
 
-            k += 1
+                roads_family.append((most_popular_iroad, most_popular_iroad_siblings))
+                roads_superstripIds_include[most_popular_iroad] = False
+                for jroad in most_popular_iroad_siblings:
+                    roads_superstripIds_include[jroad] = False
 
-        # Verbose
-        #for kroad in xrange(len(roads_family)):
-        #    print kroad, roads_family[kroad]
-        print "Number of families: %i" % (len(roads_family))
-        nsiblings = [len(k[1]) for k in roads_family[:3]]
-        nsiblings += [-1, -1, -1]
-        print "Number of siblings (most to least): %i, %i, %i, ..." % (nsiblings[0], nsiblings[1], nsiblings[2])
+                k += 1
 
-        # Check
-        check_nroads = 0
-        for kroad in xrange(len(roads_family)):
-            check_nroads += 1
-            check_nroads += len(roads_family[kroad][1])
-        assert(check_nroads == len(roads_superstripIds))
+            # Verbose
+            #for kroad in xrange(len(roads_family)):
+            #    print kroad, roads_family[kroad]
+            print "Number of roads: %i" %  nroads_per_event
+            print "Number of families: %i" % (len(roads_family))
+            nsiblings = [len(k[1]) for k in roads_family[:3]]
+            nsiblings += [-1, -1, -1]
+            print "Number of siblings (most to least): %i, %i, %i, ..." % (nsiblings[0], nsiblings[1], nsiblings[2])
 
-        # Plot
-        nfamilies = len(roads_family)
-        histos["nfamilies_per_event"].Fill(nfamilies)
+            # Check
+            check_nroads = 0
+            for kroad in xrange(len(roads_family)):
+                check_nroads += 1
+                check_nroads += len(roads_family[kroad][1])
+            assert(check_nroads == len(roads_superstripIds))
 
-        nfamilies_sib1 = 0
-        nfamilies_sib2 = 0
-        for kroad in xrange(nfamilies):
-            nsiblings = len(roads_family[kroad][1])
-            if nsiblings > 0:
-                nfamilies_sib1 += 1
-            if nsiblings > 1:
-                nfamilies_sib2 += 1
-        histos["nfamilies_sib1_per_event"].Fill(nfamilies_sib1)
-        histos["nfamilies_sib2_per_event"].Fill(nfamilies_sib2)
+            # Plot
+            nfamilies = len(roads_family)
+            histos["nfamilies_per_event"].Fill(nfamilies)
 
-        for kroad in xrange(nfamilies):
-            nsiblings = len(roads_family[kroad][1])
-            histos["nsiblings_per_event"].Fill(nsiblings)
+            nfamilies_sib1 = 0
+            nfamilies_sib2 = 0
+            nfamilies_sib3 = 0
+            for kroad in xrange(nfamilies):
+                nsiblings = len(roads_family[kroad][1])
+                if nsiblings >= 1:
+                    nfamilies_sib1 += 1
+                if nsiblings >= 2:
+                    nfamilies_sib2 += 1
+                if nsiblings >= 3:
+                    nfamilies_sib3 += 1
+            histos["nfamilies_sib1_per_event"].Fill(nfamilies_sib1)
+            histos["nfamilies_sib2_per_event"].Fill(nfamilies_sib2)
+            histos["nfamilies_sib3_per_event"].Fill(nfamilies_sib3)
 
-            sroad = roads_family[kroad][0]
-            road_hitbits = roads_hitBits[sroad]
-            histos["road_hitbits_thesibling"].Fill(road_hitbits)
+            for kroad in xrange(nfamilies):
+                nsiblings = len(roads_family[kroad][1])
+                histos["nsiblings_per_event"].Fill(nsiblings)
 
-            for sroad in roads_family[kroad][1]:
-                road_hitbits = roads_hitBits[sroad]
+                if kroad == 0:
+                    histos["nsiblings_fam0_per_event"].Fill(nsiblings)
+                elif kroad == 1:
+                    histos["nsiblings_fam1_per_event"].Fill(nsiblings)
+                elif kroad == 2:
+                    histos["nsiblings_fam2_per_event"].Fill(nsiblings)
 
-                if nsiblings == 7:
-                    histos["road_hitbits_nsiblings_7"].Fill(road_hitbits)
-                elif nsiblings == 6:
-                    histos["road_hitbits_nsiblings_6"].Fill(road_hitbits)
-                elif nsiblings == 5:
-                    histos["road_hitbits_nsiblings_5"].Fill(road_hitbits)
-                elif nsiblings == 4:
-                    histos["road_hitbits_nsiblings_4"].Fill(road_hitbits)
-                elif nsiblings == 3:
-                    histos["road_hitbits_nsiblings_3"].Fill(road_hitbits)
-                elif nsiblings == 2:
-                    histos["road_hitbits_nsiblings_2"].Fill(road_hitbits)
-                elif nsiblings == 1:
-                    histos["road_hitbits_nsiblings_1"].Fill(road_hitbits)
+                if nsiblings >= 0:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib0"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib0"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib0"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 1:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib1"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib1"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib1"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 2:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib2"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib2"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib2"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 3:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib3"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib3"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib3"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 4:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib4"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib4"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib4"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 5:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib5"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib5"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib5"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 6:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib6"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib6"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib6"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
+                if nsiblings >= 7:
+                    sroad0 = roads_family[kroad][0]
+                    histos["road_hitbits_eldest_sib7"].Fill(roads_hitBits[sroad0])
+                    for sroad in roads_family[kroad][1]:
+                        histos["road_hitbits_sibling_sib7"].Fill(roads_hitBits[sroad])
+                        histos["road_diff_sibling_sib7"].Fill(diff_sibling(roads_superstripIds[sroad0], roads_superstripIds[sroad]))
 
     tree.SetBranchStatus("*", 1)
     return
@@ -368,7 +472,7 @@ def drawer_draw(histos, options):
                 hquantile.SetBinContent(i, h.GetBinContent(i))
             else:
                 hquantile.SetBinContent(i, hquantile.GetBinContent(i+1)+h.GetBinContent(i))
-        hquantile.Scale(1.0/h.GetBinContent(1))
+        hquantile.Scale(1.0/hquantile.GetBinContent(1))
         return hquantile
 
     for hname, h in histos.iteritems():
@@ -387,12 +491,15 @@ def drawer_draw(histos, options):
         CMS_label()
         save(options.outdir, "%s_%s" % (hname, options.ss), dot_root=True)
 
+        # Draw Luciano's version
         if hname in ["nroads_per_event", "ncombinations_per_event"]:
             hquantile = plot_quantiles(h)
             hquantile.SetMaximum(hquantile.GetMaximum() * 14); hquantile.SetMinimum(0.0001)
             hquantile.SetStats(0); hquantile.Draw("hist")
             gPad.SetLogy(True)
             ps.Draw()
+            tline.DrawLine(hquantile.GetXaxis().GetXmin(), 1-0.99, hquantile.GetXaxis().GetXmax(), 1-0.99)
+            tline.DrawLine(hquantile.GetXaxis().GetXmin(), 1-0.95, hquantile.GetXaxis().GetXmax(), 1-0.95)
 
             tlatex.DrawLatex(0.6, 0.185, "%s [%.0fK bank]" % (parse_ss(options.ss), options.npatterns*1e-3))
             CMS_label()
