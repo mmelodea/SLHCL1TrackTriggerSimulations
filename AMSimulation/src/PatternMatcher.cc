@@ -163,10 +163,13 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         std::vector<bool> stubsNotInTower;  // true: not in this trigger tower
         for (unsigned istub=0; istub<nstubs; ++istub) {
             unsigned moduleId = reader.vb_modId   ->at(istub);
+            float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
             // Skip if not in this trigger tower
             bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
-            stubsNotInTower.push_back(isNotInTower);
+            bool isNotInStubWindow = !cutter_->applyCuts(moduleId, stub_ds);
+
+            stubsNotInTower.push_back(isNotInTower || isNotInStubWindow);
         }
 
         // Null stub information for those that are not in this trigger tower

@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCutter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
 using namespace slhcl1tt;
@@ -25,6 +26,8 @@ class PatternMatcher {
 
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
+
+        cutter_ = new StubCutter();
     }
 
     // Destructor
@@ -58,6 +61,7 @@ class PatternMatcher {
     // Operators
     TriggerTowerMap   * ttmap_;
     SuperstripArbiter * arbiter_;
+    StubCutter        * cutter_;
 
     // Associative memory
     AssociativeMemory associativeMemory_;
