@@ -104,6 +104,9 @@ int PatternGenerator::makePatterns(TString src) {
 
         patt.fill(0);
 
+        float conv_r = 0., conv_phi = 0., conv_z = 0.;
+        Local2Global conv_l2g;
+
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
             unsigned moduleId = reader.vb_modId   ->at(istub);
@@ -115,13 +118,21 @@ int PatternGenerator::makePatterns(TString src) {
             float    stub_z   = reader.vb_z       ->at(istub);
             float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
+            // Do local-to-global conversion
+            l2gmap_ -> convert(moduleId, strip, segment, conv_r, conv_phi, conv_z, conv_l2g);
+            //std::cout << "moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << std::endl;
+            //std::cout << "r  : " << stub_r   << " conv: " << conv_r   << std::endl;
+            //std::cout << "phi: " << stub_phi << " conv: " << conv_phi << std::endl;
+            //std::cout << "z  : " << stub_z   << " conv: " << conv_z   << std::endl;
+
             // Find superstrip ID
             unsigned ssId = 0;
             if (!arbiter_ -> useGlobalCoord()) {  // local coordinates
                 ssId = arbiter_ -> superstripLocal(moduleId, strip, segment);
 
             } else {                              // global coordinates
-                ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+                //ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+                ssId = arbiter_ -> superstripLocal(moduleId, strip, segment, conv_l2g);
             }
             patt.at(istub) = ssId;
 

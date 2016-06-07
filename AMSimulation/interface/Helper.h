@@ -10,8 +10,15 @@ namespace slhcl1tt {
 
 // Round to half-strip precision
 inline unsigned halfStripRound(float x) {
-    static const float p = 10.;
-    return floor((x*2)*p + 0.5)/p;
+    //static const float p = 10.;
+    //return floor((x*2)*p + 0.5)/p;
+    return std::round(x*2);
+}
+
+inline unsigned segmentRound(float x) {
+    //static const float p = 10.;
+    //return floor(x*p + 0.5)/p;
+    return std::round(x);
 }
 
 // Retrieve layer, ladder, module from a moduleId

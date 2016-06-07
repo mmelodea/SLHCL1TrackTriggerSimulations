@@ -5,6 +5,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Local2GlobalMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCutter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Attributes.h"
@@ -21,6 +22,9 @@ class PatternGenerator {
         // Initialize
         ttmap_ = new TriggerTowerMap();
         ttmap_->read(po_.datadir);
+
+        l2gmap_ = new Local2GlobalMap();
+        l2gmap_->read(po_.datadir);
 
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
@@ -59,6 +63,7 @@ class PatternGenerator {
 
     // Operators
     TriggerTowerMap   * ttmap_;
+    Local2GlobalMap   * l2gmap_;
     SuperstripArbiter * arbiter_;
     StubCutter        * cutter_;
 

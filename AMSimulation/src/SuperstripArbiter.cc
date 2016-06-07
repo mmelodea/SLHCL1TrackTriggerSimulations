@@ -171,7 +171,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
         case SuperstripType::OPTIMIZED:
             optimized_sf_    = token2f;
             optimized_nz_    = token4f;
-            useGlobalCoord_ = true;
+            useGlobalCoord_  = true;
 
             if (optimized_sf_ <= 0. || optimized_nz_ == 0)
                 throw std::invalid_argument("Incorrect optimized superstrip definition.");
@@ -318,6 +318,19 @@ unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, floa
 }
 
 // _____________________________________________________________________________
+unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, float segment, const Local2Global& conv_l2g) const {
+    switch (sstype_) {
+    case SuperstripType::FOUNTAIN:
+        return superstripFountain(moduleId, strip, segment, conv_l2g);
+        break;
+
+    default:
+        throw std::logic_error("Incompatible superstrip type.");
+        break;
+    }
+}
+
+// _____________________________________________________________________________
 unsigned SuperstripArbiter::superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds) const {
     switch (sstype_) {
     case SuperstripType::PROJECTIVE:
@@ -413,7 +426,41 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float
     i_phi     = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
     i_z       = (i_z   < 0) ? 0 : (i_z   >= n_z  ) ? (n_z   - 1) : i_z;    // proper range
 
-    unsigned ss = i_z * n_phi + i_phi;
+    //unsigned ss = i_z * n_phi + i_phi;
+    unsigned ss = ((i_z & 0x7) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
+    return ss;
+}
+
+// _____________________________________________________________________________
+unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, float segment, const Local2Global& conv_l2g) const {
+    unsigned lay16    = compressLayer(decodeLayer(moduleId));
+
+    unsigned istrip = halfStripRound(strip);
+    unsigned isegment = segmentRound(segment);
+    assert(istrip < (1<<11));   // 11-bit number
+    assert(isegment < (1<<5));  // 5-bit number
+
+    const unsigned chipId = (istrip >> 8);
+    istrip = istrip & 0xff;
+    //const unsigned cicId = isPSModule(moduleId) ? (isegment >> 4) : isegment;
+    //isegment = isegment & 0xf;
+
+    float phi0    = phiMins_.at(lay16);
+    float z0      = zMins_.at(lay16);
+    float eps_phi = fountain_phiBins_.at(lay16) / float(1<<9);
+    float eps_z   = fountain_zBins_.at(lay16) / float(1<<15);
+
+    int i_phi0 = std::round((conv_l2g.x_phi0 - phi0)/eps_phi);
+    int i_phi = std::round(conv_l2g.x_phi/eps_phi);
+    i_phi = i_phi0 + i_phi * istrip;
+    i_phi >>= 9;
+
+    int i_z0 = std::round((conv_l2g.x_z0 - z0)/eps_z);
+    int i_z = std::round((conv_l2g.x_z)/eps_z);
+    i_z = i_z0 + i_z * isegment;
+    i_z >>= 15;
+
+    unsigned ss = ((i_z & 0x7) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
     return ss;
 }
 
