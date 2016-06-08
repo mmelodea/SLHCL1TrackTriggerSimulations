@@ -198,6 +198,9 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         // Start pattern recognition
         hitBuffer_.reset();
 
+        float conv_r = 0., conv_phi = 0., conv_z = 0.;
+        LocalToGlobal conv_l2g;
+
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
             bool isNotInTower = stubsNotInTower.at(istub);
@@ -213,13 +216,20 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             float    stub_z   = reader.vb_z       ->at(istub);
             float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
+            // Do local-to-global conversion
+            l2gmap_ -> convert(moduleId, strip, segment, conv_r, conv_phi, conv_z, conv_l2g);
+
             // Find superstrip ID
             unsigned ssId = 0;
             if (!arbiter_ -> useGlobalCoord()) {  // local coordinates
                 ssId = arbiter_ -> superstripLocal(moduleId, strip, segment);
 
             } else {                              // global coordinates
-                ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+                if (po_.emu == 0) {
+                    ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+                } else {
+                    ssId = arbiter_ -> superstripLocal(moduleId, strip, segment, conv_l2g);
+                }
             }
 
             unsigned lay16    = compressLayer(decodeLayer(moduleId));

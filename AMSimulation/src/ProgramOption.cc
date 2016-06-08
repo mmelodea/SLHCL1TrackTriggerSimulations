@@ -24,6 +24,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
 
       << "  verbose: "      << po.verbose
       << "  speedup: "      << po.speedup
+      << "  emu: "          << po.emu
       << "  maxEvents: "    << po.maxEvents
 
       << "  nLayers: "      << po.nLayers

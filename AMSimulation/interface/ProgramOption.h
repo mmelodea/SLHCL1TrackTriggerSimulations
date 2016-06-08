@@ -17,6 +17,7 @@ struct ProgramOption {
 
     int         verbose;
     int         speedup;
+    int         emu;
     long long   maxEvents;
 
     unsigned    nLayers;

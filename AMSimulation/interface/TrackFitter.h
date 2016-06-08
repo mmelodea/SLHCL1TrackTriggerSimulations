@@ -3,6 +3,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/LocalToGlobalMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoATF.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoLTF.h"
@@ -21,6 +22,9 @@ class TrackFitter {
       nEvents_(po.maxEvents), verbose_(po.verbose),
       prefixRoad_("AMTTRoads_"), prefixTrack_("AMTTTracks_"), suffix_("") {
 
+        l2gmap_ = new LocalToGlobalMap();
+        l2gmap_->read(po_.datadir);
+
         // Decide the track fitter to use
         fitter_ = 0;
         if (po.algo == "PCA4" || po.algo == "PCA5") {
@@ -38,6 +42,7 @@ class TrackFitter {
 
     // Destructor
     ~TrackFitter() {
+        if (l2gmap_)  delete l2gmap_;
         if (fitter_)  delete fitter_;
     }
 
@@ -58,6 +63,9 @@ class TrackFitter {
     const TString prefixRoad_;
     const TString prefixTrack_;
     const TString suffix_;
+
+    // Operators
+    LocalToGlobalMap  * l2gmap_;
 
     // Track fitter
     TrackFitterAlgoBase *  fitter_;

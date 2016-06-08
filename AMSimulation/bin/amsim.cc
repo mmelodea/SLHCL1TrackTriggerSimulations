@@ -60,6 +60,7 @@ int main(int argc, char **argv) {
 
         ("verbosity,v"  , po::value<int>(&option.verbose)->default_value(1), "Verbosity level (-1 = very quiet; 0 = quiet, 1 = verbose, 2+ = debug)")
         ("speedup"      , po::value<int>(&option.speedup)->default_value(0), "Speed-up level")
+        ("emu"          , po::value<int>(&option.emu)->default_value(0), "Emulation version")
         ("maxEvents,n"  , po::value<long long>(&option.maxEvents)->default_value(-1), "Specfiy max number of events")
 
         ("nLayers"      , po::value<unsigned>(&option.nLayers)->default_value(6), "Specify # of layers")

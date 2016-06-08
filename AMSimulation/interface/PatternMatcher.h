@@ -5,6 +5,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TriggerTowerMap.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/LocalToGlobalMap.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/SuperstripArbiter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/StubCutter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
@@ -24,6 +25,9 @@ class PatternMatcher {
         ttmap_ = new TriggerTowerMap();
         ttmap_->read(po_.datadir);
 
+        l2gmap_ = new LocalToGlobalMap();
+        l2gmap_->read(po_.datadir);
+
         arbiter_ = new SuperstripArbiter();
         arbiter_->setDefinition(po_.superstrip, po_.tower, ttmap_);
 
@@ -33,6 +37,7 @@ class PatternMatcher {
     // Destructor
     ~PatternMatcher() {
         if (ttmap_)     delete ttmap_;
+        if (l2gmap_)    delete l2gmap_;
         if (arbiter_)   delete arbiter_;
     }
 
@@ -60,6 +65,7 @@ class PatternMatcher {
 
     // Operators
     TriggerTowerMap   * ttmap_;
+    LocalToGlobalMap  * l2gmap_;
     SuperstripArbiter * arbiter_;
     StubCutter        * cutter_;
 

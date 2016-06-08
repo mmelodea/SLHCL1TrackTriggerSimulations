@@ -128,13 +128,25 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 acomb.stubs_z   .clear();
                 acomb.stubs_bool.clear();
 
+                float conv_r = 0., conv_phi = 0., conv_z = 0.;
+                LocalToGlobal conv_l2g;
+
                 for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
                     const unsigned stubRef = acomb.stubRefs.at(istub);
                     if (stubRef != CombinationFactory::BAD) {
-                        acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
-                        acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
-                        acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
-                        acomb.stubs_bool.push_back(true);
+                        if (po_.emu == 0) {
+                            acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
+                            acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
+                            acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
+                            acomb.stubs_bool.push_back(true);
+                        } else {
+                            // Do local-to-global conversion
+                            l2gmap_ -> convert(reader.vb_modId->at(stubRef), reader.vb_coordx->at(stubRef), reader.vb_coordy->at(stubRef), conv_r, conv_phi, conv_z, conv_l2g);
+                            acomb.stubs_r   .push_back(conv_r);
+                            acomb.stubs_phi .push_back(conv_phi);
+                            acomb.stubs_z   .push_back(conv_z);
+                            acomb.stubs_bool.push_back(true);
+                        }
                     } else {
                         acomb.stubs_r   .push_back(0.);
                         acomb.stubs_phi .push_back(0.);
