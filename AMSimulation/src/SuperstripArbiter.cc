@@ -318,7 +318,7 @@ unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, floa
 }
 
 // _____________________________________________________________________________
-unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, float segment, const Local2Global& conv_l2g) const {
+unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g) const {
     switch (sstype_) {
     case SuperstripType::FOUNTAIN:
         return superstripFountain(moduleId, strip, segment, conv_l2g);
@@ -432,7 +432,7 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float
 }
 
 // _____________________________________________________________________________
-unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, float segment, const Local2Global& conv_l2g) const {
+unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g) const {
     unsigned lay16    = compressLayer(decodeLayer(moduleId));
 
     unsigned istrip = halfStripRound(strip);

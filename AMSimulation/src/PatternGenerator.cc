@@ -105,7 +105,7 @@ int PatternGenerator::makePatterns(TString src) {
         patt.fill(0);
 
         float conv_r = 0., conv_phi = 0., conv_z = 0.;
-        Local2Global conv_l2g;
+        LocalToGlobal conv_l2g;
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
