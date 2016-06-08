@@ -51,9 +51,9 @@ SuperstripArbiter::SuperstripArbiter()
     // phiWidths for 6 barrel layer [0..5], 5 +z endcap disks [6..10], 5 -z endcap disks [11..15]
     // CUIDADO: dummy values are used for the endcap layers
     phiWidths_ = {
-//        0.00381, 0.00439, 0.00459, 0.00485, 0.00523, 0.00575,
+        0.00381*2, 0.00439, 0.00459, 0.00485, 0.00523, 0.00575*2,
 //    	0.00762, 0.00439, 0.00459, 0.00485, 0.00523, 0.00575, // L0 x 2
-		0.01091,0.00518,0.00409,0.00309,0.00275,0.00571,  // candleStick low-Pt
+//		0.01091,0.00518,0.00409,0.00309,0.00275,0.00571,  // candleStick low-Pt
 //		0.00908,0.00431,0.00341,0.00257,0.00343,0.00951,  // V1. by hand variation on the previous (1,1,1,1,1.5,2.0). Keep pattern volume constant
 		9.99999, 9.99999, 9.99999, 9.99999, 9.99999,
         9.99999, 9.99999, 9.99999, 9.99999, 9.99999
@@ -262,6 +262,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
         break;
     }
 
+std::cout << "# superstrips per layer: " << nsuperstripsPerLayer() << std::endl;
 }
 
 // _____________________________________________________________________________
