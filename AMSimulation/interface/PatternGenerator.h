@@ -37,6 +37,7 @@ class PatternGenerator {
         if (ttmap_)     delete ttmap_;
         if (l2gmap_)    delete l2gmap_;
         if (arbiter_)   delete arbiter_;
+        if (cutter_)    delete cutter_;
 
         for (std::map<pattern_type, Attributes *>::iterator it=patternAttributes_map_.begin();
              it != patternAttributes_map_.end(); ++it) {

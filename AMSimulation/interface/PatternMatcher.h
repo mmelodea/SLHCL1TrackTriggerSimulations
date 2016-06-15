@@ -39,6 +39,7 @@ class PatternMatcher {
         if (ttmap_)     delete ttmap_;
         if (l2gmap_)    delete l2gmap_;
         if (arbiter_)   delete arbiter_;
+        if (cutter_)    delete cutter_;
     }
 
     // Main driver
