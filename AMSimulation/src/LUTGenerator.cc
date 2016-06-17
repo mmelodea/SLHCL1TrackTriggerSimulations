@@ -1,7 +1,25 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/LUTGenerator.h"
 
 #include <bitset>
+#include <fstream>
+#include <iostream>
 
+
+// _____________________________________________________________________________
+unsigned LUTGenerator::localModuleId(unsigned moduleId) {
+    unsigned lay16 = compressLayer(decodeLayer(moduleId));
+
+    if (po_.tower == 27) {
+        unsigned offsets[16] = {50230, 60326, 70426, 80611, 90711, 100811, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        moduleId -= offsets[lay16];
+    }
+
+    unsigned lad = decodeLadder(moduleId);
+    unsigned mod = decodeModule(moduleId);
+    unsigned newModuleId = ((lad & 0xf) << 4) | (mod & 0xf);
+
+    return newModuleId;
+}
 
 // _____________________________________________________________________________
 int LUTGenerator::makeLocalToGlobal() {
@@ -10,6 +28,8 @@ int LUTGenerator::makeLocalToGlobal() {
     float conv_r = 0., conv_phi = 0., conv_z = 0.;
     LocalToGlobal conv_l2g;
     LocalToGlobalInt conv_l2g_int;
+
+    std::vector<std::string> bitStrings;
 
     const std::vector<unsigned>& moduleIds = ttmap_->getTriggerTowerModules(po_.tower);
     for (unsigned i=0; i<moduleIds.size(); ++i) {
@@ -26,13 +46,39 @@ int LUTGenerator::makeLocalToGlobal() {
             // Find superstrip ID
             unsigned ssId = arbiter_ -> superstripLocal(moduleId, strip, segment, conv_l2g, conv_l2g_int);
 
-            std::cout << moduleId << ", " << chipId << ", "
-                      << std::bitset<64>(conv_l2g_int.i_phi0) << ", " << std::bitset<64>(conv_l2g_int.i_phi) << ", "
-                      << std::bitset<64>(conv_l2g_int.i_z0  ) << ", " << std::bitset<64>(conv_l2g_int.i_z  ) << ", "
-                      << std::bitset<64>(conv_l2g_int.i_r0  ) << ", " << std::bitset<64>(conv_l2g_int.i_r  )
-                      << std::endl;
+            if (verbose_ > 1) {
+                std::cout << moduleId << ", " << chipId << ", "
+                          << std::bitset<64>(conv_l2g_int.i_phi0) << ", " << std::bitset<64>(conv_l2g_int.i_phi) << ", "
+                          << std::bitset<64>(conv_l2g_int.i_z0  ) << ", " << std::bitset<64>(conv_l2g_int.i_z  ) << ", "
+                          << std::bitset<64>(conv_l2g_int.i_r0  ) << ", " << std::bitset<64>(conv_l2g_int.i_r  )
+                          << std::endl;
+            }
+
+            unsigned newModuleId = localModuleId(moduleId);
+            std::string bitString = "";
+            bitString += std::bitset<18>(conv_l2g_int.i_phi0).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_phi).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_z0).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_z).to_string();
+            bitString += std::bitset<8>(newModuleId).to_string();
+            bitString += std::bitset<3>(chipId).to_string();
+            bitStrings.push_back(bitString);
         }
     }
+
+    // Open text file
+    ofstream txtfile("lut_L2G.txt");
+
+    // Write text file
+    for (std::vector<std::string>::const_iterator it=bitStrings.begin(); it!=bitStrings.end(); ++it) {
+        txtfile << *it << std::endl;
+        if (verbose_ > 2) {
+            std::cout << *it << std::endl;
+        }
+    }
+
+    // Close text file
+    txtfile.close();
 
     return 0;
 }
@@ -45,6 +91,8 @@ int LUTGenerator::makeLocalToGlobalStar() {
     int64_t conv_r_int = 0., conv_phi_int = 0., conv_z_int = 0.;
     LocalToGlobal conv_l2g;
     LocalToGlobalInt conv_l2g_int;
+
+    std::vector<std::string> bitStrings;
 
     const std::vector<unsigned>& moduleIds = ttmap_->getTriggerTowerModules(po_.tower);
     for (unsigned i=0; i<moduleIds.size(); ++i) {
@@ -60,13 +108,41 @@ int LUTGenerator::makeLocalToGlobalStar() {
 
             l2gmap_ -> convertInt(moduleId, strip, segment, po_.tower, conv_l2g, conv_r_int, conv_phi_int, conv_z_int, conv_l2g_int);
 
-            std::cout << moduleId << ", " << chipId << ", "
-                      << std::bitset<64>(conv_l2g_int.i_phi0) << ", " << std::bitset<64>(conv_l2g_int.i_phi) << ", "
-                      << std::bitset<64>(conv_l2g_int.i_z0  ) << ", " << std::bitset<64>(conv_l2g_int.i_z  ) << ", "
-                      << std::bitset<64>(conv_l2g_int.i_r0  ) << ", " << std::bitset<64>(conv_l2g_int.i_r  )
-                      << std::endl;
+            if (verbose_ > 1) {
+                std::cout << moduleId << ", " << chipId << ", "
+                          << std::bitset<64>(conv_l2g_int.i_phi0) << ", " << std::bitset<64>(conv_l2g_int.i_phi) << ", "
+                          << std::bitset<64>(conv_l2g_int.i_z0  ) << ", " << std::bitset<64>(conv_l2g_int.i_z  ) << ", "
+                          << std::bitset<64>(conv_l2g_int.i_r0  ) << ", " << std::bitset<64>(conv_l2g_int.i_r  )
+                          << std::endl;
+            }
+
+            unsigned newModuleId = localModuleId(moduleId);
+            std::string bitString = "";
+            bitString += std::bitset<18>(conv_l2g_int.i_phi0).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_phi).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_z0).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_z).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_r0).to_string();
+            bitString += std::bitset<18>(conv_l2g_int.i_r).to_string();
+            bitString += std::bitset<8>(newModuleId).to_string();
+            bitString += std::bitset<3>(chipId).to_string();
+            bitStrings.push_back(bitString);
         }
     }
+
+    // Open text file
+    ofstream txtfile("lut_L2GStar.txt");
+
+    // Write text file
+    for (std::vector<std::string>::const_iterator it=bitStrings.begin(); it!=bitStrings.end(); ++it) {
+        txtfile << *it << std::endl;
+        if (verbose_ > 2) {
+            std::cout << *it << std::endl;
+        }
+    }
+
+    // Close text file
+    txtfile.close();
 
     return 0;
 }

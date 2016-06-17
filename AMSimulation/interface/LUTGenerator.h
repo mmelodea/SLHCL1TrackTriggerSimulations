@@ -43,6 +43,8 @@ class LUTGenerator {
   private:
     // Member functions
 
+    unsigned localModuleId(unsigned moduleId);
+
     // Make local-to-global LUT for superstrip conversion
     int makeLocalToGlobal();
 

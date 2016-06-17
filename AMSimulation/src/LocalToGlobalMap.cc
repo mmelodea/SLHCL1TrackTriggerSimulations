@@ -111,21 +111,66 @@ void LocalToGlobalMap::convertInt(const unsigned moduleId, const float strip, co
     unsigned ttphi = tt%8;
     float phi0 = -M_PI/2. + (2.*M_PI/8.) * (0.5+ttphi);  // center of trigger tower
 
-    conv_l2g_int.i_phi  = std::round((conv_l2g.x_phi  - 0.  )/deltaPhi * std::pow(2,26));
-    conv_l2g_int.i_phi0 = std::round((conv_l2g.x_phi0 - phi0)/deltaPhi * std::pow(2,18));
-    conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ * std::pow(2,26));
-    conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - 0.  )/deltaZ * std::pow(2,18));
-    conv_l2g_int.i_r    = std::round((conv_l2g.x_r    - 0.  )/deltaR * std::pow(2,26));
-    conv_l2g_int.i_r0   = std::round((conv_l2g.x_r0   - 0.  )/deltaR * std::pow(2,18));
+    conv_l2g_int.i_phi  = std::round((conv_l2g.x_phi  - 0.  )/deltaPhi * std::pow(2,26));  // 18 + 8 = 26
+    conv_l2g_int.i_phi0 = std::round((conv_l2g.x_phi0 - phi0)/deltaPhi * std::pow(2,18));  // 18
+    if (isPSModule(moduleId)) {  // is PS
+        if (isBarrelModule(moduleId)) {  // is barrel
+            conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ * std::pow(2,23));  // 18 + 5 = 23
+            conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - 0.  )/deltaZ * std::pow(2,18));  // 18
+            conv_l2g_int.i_r    = std::round((conv_l2g.x_r    - 0.  )/deltaR * std::pow(2,26));
+            conv_l2g_int.i_r0   = std::round((conv_l2g.x_r0   - 0.  )/deltaR * std::pow(2,18));
+        } else {  // is endcap
+            conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ * std::pow(2,26));
+            conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - 0.  )/deltaZ * std::pow(2,18));
+            conv_l2g_int.i_r    = std::round((conv_l2g.x_r    - 0.  )/deltaR * std::pow(2,23));  // 18 + 5 = 23
+            conv_l2g_int.i_r0   = std::round((conv_l2g.x_r0   - 0.  )/deltaR * std::pow(2,18));  // 18
+        }
+    } else {  // is 2S
+        if (isBarrelModule(moduleId)) {  // is barrel
+            conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ * std::pow(2,19));  // 18 + 1 = 19
+            conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - 0.  )/deltaZ * std::pow(2,18));  // 18
+            conv_l2g_int.i_r    = std::round((conv_l2g.x_r    - 0.  )/deltaR * std::pow(2,26));
+            conv_l2g_int.i_r0   = std::round((conv_l2g.x_r0   - 0.  )/deltaR * std::pow(2,18));
+        } else {  // is endcap
+            conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ * std::pow(2,26));
+            conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - 0.  )/deltaZ * std::pow(2,18));
+            conv_l2g_int.i_r    = std::round((conv_l2g.x_r    - 0.  )/deltaR * std::pow(2,19));  // 18 + 1 = 19
+            conv_l2g_int.i_r0   = std::round((conv_l2g.x_r0   - 0.  )/deltaR * std::pow(2,18));  // 18
+        }
+    }
 
-    if (isBarrelModule(moduleId)) {
-        conv_r   = (conv_l2g_int.i_r   * istrip  ) + (conv_l2g_int.i_r0   << 8);
-        conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
-        conv_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 8);
-    } else {
-        conv_r   = (conv_l2g_int.i_r   * isegment) + (conv_l2g_int.i_r0   << 8);
-        conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
-        conv_z   = (conv_l2g_int.i_z   * istrip  ) + (conv_l2g_int.i_z0   << 8);
+    if (isPSModule(moduleId)) {  // is PS
+        if (isBarrelModule(moduleId)) {  // is barrel
+            conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
+            conv_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 5);
+            conv_r   = (conv_l2g_int.i_r   * istrip  ) + (conv_l2g_int.i_r0   << 8);
+            conv_phi >>= 8;
+            conv_z   >>= 5;
+            conv_r   >>= 8;
+        } else {  // is endcap
+            conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
+            conv_z   = (conv_l2g_int.i_z   * istrip  ) + (conv_l2g_int.i_z0   << 8);
+            conv_r   = (conv_l2g_int.i_r   * isegment) + (conv_l2g_int.i_r0   << 5);
+            conv_phi >>= 8;
+            conv_z   >>= 8;
+            conv_r   >>= 5;
+        }
+    } else {  // is 2S
+        if (isBarrelModule(moduleId)) {  // is barrel
+            conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
+            conv_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 1);
+            conv_r   = (conv_l2g_int.i_r   * istrip  ) + (conv_l2g_int.i_r0   << 8);
+            conv_phi >>= 8;
+            conv_z   >>= 1;
+            conv_r   >>= 8;
+        } else {  // is endcap
+            conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
+            conv_z   = (conv_l2g_int.i_z   * istrip  ) + (conv_l2g_int.i_z0   << 8);
+            conv_r   = (conv_l2g_int.i_r   * isegment) + (conv_l2g_int.i_r0   << 1);
+            conv_phi >>= 8;
+            conv_z   >>= 8;
+            conv_r   >>= 1;
+        }
     }
 
     return;

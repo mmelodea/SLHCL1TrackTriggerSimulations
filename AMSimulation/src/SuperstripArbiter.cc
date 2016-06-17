@@ -449,23 +449,27 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, f
     const float z0       = zMins_.at(lay16);
     const float deltaPhi = fountain_phiBins_.at(lay16);
     const float deltaZ   = fountain_zBins_.at(lay16);
+    int64_t i_phi        = 0;
+    int64_t i_z          = 0;
 
     conv_l2g_int.i_phi  = std::round((conv_l2g.x_phi  - 0.  )/deltaPhi * std::pow(2,17));  // 18 + 8 - 9 = 17
     conv_l2g_int.i_phi0 = std::round((conv_l2g.x_phi0 - phi0)/deltaPhi * std::pow(2,9 ));  // 18 - 9 = 9
-    conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ   * std::pow(2,20));  // 18 + 5 - 3 = 20
-    conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - z0  )/deltaZ   * std::pow(2,15));  // 18 - 3 = 15
+    if (isPSModule(moduleId)) {  // is PS
+        conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ   * std::pow(2,20));  // 18 + 5 - 3 = 20
+        conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - z0  )/deltaZ   * std::pow(2,15));  // 18 - 3 = 15
+    } else {  // is 2S
+        conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ   * std::pow(2,16));  // 18 + 1 - 3 = 16
+        conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - z0  )/deltaZ   * std::pow(2,15));  // 18 - 3 = 15
+    }
     conv_l2g_int.i_r    = 0;
     conv_l2g_int.i_r0   = 0;
 
-    int64_t i_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
+    i_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
     i_phi >>= 17;
-    int64_t i_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 5);
-    i_z   >>= 20;
-
-    if (!isPSModule(moduleId)) {  // 2S module
-        conv_l2g_int.i_z    = std::round((conv_l2g.x_z    - 0.  )/deltaZ   * std::pow(2,16));  // 18 + 1 - 3 = 16
-        conv_l2g_int.i_z0   = std::round((conv_l2g.x_z0   - z0  )/deltaZ   * std::pow(2,15));  // 18 - 3 = 15
-
+    if (isPSModule(moduleId)) {  // is PS
+        i_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 5);
+        i_z   >>= 20;
+    } else {  // is 2S
         i_z   = (conv_l2g_int.i_z   * isegment) + (conv_l2g_int.i_z0   << 1);
         i_z   >>= 16;
     }
