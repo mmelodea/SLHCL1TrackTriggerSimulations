@@ -200,6 +200,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
         float conv_r = 0., conv_phi = 0., conv_z = 0.;
         LocalToGlobal conv_l2g;
+        LocalToGlobalInt conv_l2g_int;
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
@@ -228,7 +229,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
                 if (po_.emu == 0) {
                     ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
                 } else {
-                    ssId = arbiter_ -> superstripLocal(moduleId, strip, segment, conv_l2g);
+                    ssId = arbiter_ -> superstripLocal(moduleId, strip, segment, conv_l2g, conv_l2g_int);
                 }
             }
 

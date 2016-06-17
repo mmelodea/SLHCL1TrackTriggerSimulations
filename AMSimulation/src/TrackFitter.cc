@@ -130,6 +130,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
                 float conv_r = 0., conv_phi = 0., conv_z = 0.;
                 LocalToGlobal conv_l2g;
+                LocalToGlobalInt conv_l2g_int;
 
                 for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
                     const unsigned stubRef = acomb.stubRefs.at(istub);

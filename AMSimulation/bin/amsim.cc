@@ -6,6 +6,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitter.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/PatternAnalyzer.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MatrixTester.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/LUTGenerator.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/NTupleMaker.h"
 
 #include "boost/program_options.hpp"
@@ -42,6 +43,7 @@ int main(int argc, char **argv) {
         ("trackFitting,T"      , "Perform track fitting")
         ("bankAnalysis,A"      , "Analyze associative memory pattern bank")
         ("matrixTesting,U"     , "Test matrix constants for PCA track fitting")
+        ("lutGeneration,L"     , "Generate LUTs for firmware")
         ("write,W"             , "Write full ntuple")
         ("no-color"            , "Turn off colored text")
         ("timing"              , "Show timing information")
@@ -169,9 +171,10 @@ int main(int argc, char **argv) {
                   vm.count("trackFitting")       +
                   vm.count("bankAnalysis")       +
                   vm.count("matrixTesting")      +
+                  vm.count("lutGeneration")      +
                   vm.count("write")              ;
     if (vmcount != 1) {
-        std::cerr << "ERROR: Must select exactly one of '-C', '-B', '-R', '-M', '-T', '-A', '-U', or 'W'" << std::endl;
+        std::cerr << "ERROR: Must select exactly one of '-C', '-B', '-R', '-M', '-T', '-A', '-U', '-L' or 'W'" << std::endl;
         //std::cout << visible << std::endl;
         return EXIT_FAILURE;
     }
@@ -279,6 +282,17 @@ int main(int argc, char **argv) {
             return exitcode;
         }
         std::cout << "PCA matrix testing " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
+
+    } else if (vm.count("lutGeneration")) {
+        std::cout << Color("magenta") << "Start LUTs generation..." << EndColor() << std::endl;
+
+        LUTGenerator generator(option);
+        int exitcode = generator.run();
+        if (exitcode) {
+            std::cerr << "An error occurred during LUTs generation. Exiting." << std::endl;
+            return exitcode;
+        }
+        std::cout << "LUTs generation " << Color("lgreenb") << "DONE" << EndColor() << "." << std::endl;
 
     } else if (vm.count("write")) {
         std::cout << Color("magenta") << "Start writing full ntuple..." << EndColor() << std::endl;

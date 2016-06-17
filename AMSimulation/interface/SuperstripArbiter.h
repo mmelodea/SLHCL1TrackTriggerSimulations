@@ -23,7 +23,7 @@ class SuperstripArbiter {
 
     // Operators
     unsigned superstripLocal(unsigned moduleId, float strip, float segment) const;
-    unsigned superstripLocal(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g) const;
+    unsigned superstripLocal(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g, LocalToGlobalInt& conv_l2g_int) const;
     unsigned superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds) const;
 
     // Functions
@@ -46,7 +46,7 @@ class SuperstripArbiter {
     unsigned superstripFountain(unsigned moduleId, float r, float phi, float z, float ds) const;
     unsigned superstripOptimized(unsigned moduleId, float r, float phi, float z, float ds) const;
 
-    unsigned superstripFountain(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g) const;
+    unsigned superstripFountain(unsigned moduleId, float strip, float segment, const LocalToGlobal& conv_l2g, LocalToGlobalInt& conv_l2g_int) const;
 
     // Member data
     SuperstripType     sstype_;
