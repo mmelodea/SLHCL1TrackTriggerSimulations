@@ -14,6 +14,8 @@
 #include "DataFormats/SiPixelDetId/interface/StackedTrackerDetId.h"
 //#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
+#include "DataFormats/Math/interface/deltaPhi.h"
+
 #include "SLHCL1TrackTriggerSimulations/NTupleTools/interface/ModuleIdFunctor.h"
 
 #include <iostream>
@@ -25,7 +27,7 @@
 #include "TString.h"
 
 class LinearRegression {
-  public:
+public:
     LinearRegression() : Sx(0.), Sy(0.), Sxx(0.), Sxy(0.), Syy(0.), n(0) {}
     ~LinearRegression() {}
 
@@ -44,9 +46,34 @@ class LinearRegression {
         beta = (nn * Sxy - Sx * Sy) / (nn * Sxx - Sx * Sx);
     }
 
-  private:
+protected:
     double Sx, Sy, Sxx, Sxy, Syy;
     int n;
+};
+
+class LinearRegressionPhi : public LinearRegression {
+public:
+    LinearRegressionPhi() : LinearRegression(), y0(0), has_set_y0(false) {}
+    ~LinearRegressionPhi() {}
+
+    void fill(double x, double y) {
+        if (!has_set_y0) {
+            y0 = y;
+            has_set_y0 = true;
+        }
+        y = y0 + reco::deltaPhi(y, y0);
+
+        Sx += x;
+        Sy += y;
+        Sxx += x * x;
+        Sxy += x * y;
+        Syy += y * y;
+        n += 1;
+    }
+
+protected:
+    double y0;
+    bool has_set_y0;
 };
 
 
@@ -194,7 +221,7 @@ void AnalyzerModuleLocalToGlobal::endJob() {
             assert(nchips * nstrips == 2048);
             unsigned nsegments = ncols;
             for (unsigned ichip=0; ichip<nchips; ichip++) {
-                LinearRegression phiRegression;
+                LinearRegressionPhi phiRegression;
                 LinearRegression zRegression;
                 LinearRegression rRegression;
 
