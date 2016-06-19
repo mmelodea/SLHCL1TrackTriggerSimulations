@@ -440,7 +440,7 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, f
     assert(istrip < (1<<11));   // 11-bit number
     assert(isegment < (1<<5));  // 5-bit number
 
-    const unsigned chipId = (istrip >> 8);
+    //const unsigned chipId = (istrip >> 8);
     istrip = istrip & 0xff;
     //const unsigned cicId = isPSModule(moduleId) ? (isegment >> 4) : isegment;
     //isegment = isegment & 0xf;
@@ -449,8 +449,6 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, f
     const float z0       = zMins_.at(lay16);
     const float deltaPhi = fountain_phiBins_.at(lay16);
     const float deltaZ   = fountain_zBins_.at(lay16);
-    int64_t i_phi        = 0;
-    int64_t i_z          = 0;
 
     conv_l2g_int.i_phi  = std::round((conv_l2g.x_phi  - 0.  )/deltaPhi * std::pow(2,17));  // 18 + 8 - 9 = 17
     conv_l2g_int.i_phi0 = std::round((conv_l2g.x_phi0 - phi0)/deltaPhi * std::pow(2,9 ));  // 18 - 9 = 9
@@ -464,6 +462,18 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float strip, f
     conv_l2g_int.i_r    = 0;
     conv_l2g_int.i_r0   = 0;
 
+    // Store only 18 LSBs, unsigned
+    conv_l2g_int.i_phi  &= 0x3ffff;
+    conv_l2g_int.i_phi0 &= 0x3ffff;
+    conv_l2g_int.i_z    &= 0x3ffff;
+    conv_l2g_int.i_z0   &= 0x3ffff;
+
+    // Pad with left 1s because i_phi and i_z are negative numbers
+    conv_l2g_int.i_phi  |= 0xfffffffffffc0000;
+    conv_l2g_int.i_z    |= 0xfffffffffffc0000;
+
+    int64_t i_phi = 0;
+    int64_t i_z   = 0;
     i_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
     i_phi >>= 17;
     if (isPSModule(moduleId)) {  // is PS

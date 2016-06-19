@@ -91,7 +91,6 @@ void LocalToGlobalMap::convert(const unsigned moduleId, const float strip, const
         conv_phi = conv_l2g.x_phi0 + conv_l2g.x_phi * istrip;
         conv_z   = conv_l2g.x_z0   + conv_l2g.x_z   * istrip;
     }
-
     return;
 }
 
@@ -103,6 +102,11 @@ void LocalToGlobalMap::convertInt(const unsigned moduleId, const float strip, co
     unsigned isegment = segmentRound(segment);
     assert(istrip < (1<<11));   // 11-bit number
     assert(isegment < (1<<5));  // 5-bit number
+
+    //const unsigned chipId = (istrip >> 8);
+    istrip = istrip & 0xff;
+    //const unsigned cicId = isPSModule(moduleId) ? (isegment >> 4) : isegment;
+    //isegment = isegment & 0xf;
 
     float deltaPhi = 1. * 2;     // [-1, 1] rad
     float deltaZ   = 1024. * 2;  // [-1024, 1024] cm
@@ -139,6 +143,22 @@ void LocalToGlobalMap::convertInt(const unsigned moduleId, const float strip, co
         }
     }
 
+    // Store only 18 LSBs, signed
+    conv_l2g_int.i_phi  &= 0x3ffff;
+    conv_l2g_int.i_phi0 &= 0x3ffff;
+    conv_l2g_int.i_z    &= 0x3ffff;
+    conv_l2g_int.i_z0   &= 0x3ffff;
+    conv_l2g_int.i_r    &= 0x3ffff;
+    conv_l2g_int.i_r0   &= 0x3ffff;
+
+    // Pad with left 1s if negative
+    conv_l2g_int.i_phi  |= (conv_l2g_int.i_phi  & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_l2g_int.i_phi0 |= (conv_l2g_int.i_phi0 & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_l2g_int.i_z    |= (conv_l2g_int.i_z    & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_l2g_int.i_z0   |= (conv_l2g_int.i_z0   & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_l2g_int.i_r    |= (conv_l2g_int.i_r    & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_l2g_int.i_r0   |= (conv_l2g_int.i_r0   & 0x20000) ? 0xfffffffffffc0000 : 0;
+
     if (isPSModule(moduleId)) {  // is PS
         if (isBarrelModule(moduleId)) {  // is barrel
             conv_phi = (conv_l2g_int.i_phi * istrip  ) + (conv_l2g_int.i_phi0 << 8);
@@ -172,7 +192,6 @@ void LocalToGlobalMap::convertInt(const unsigned moduleId, const float strip, co
             conv_r   >>= 1;
         }
     }
-
     return;
 }
 
