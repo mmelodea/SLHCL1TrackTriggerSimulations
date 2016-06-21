@@ -30,6 +30,7 @@ int LUTGenerator::makeLocalToGlobal() {
     LocalToGlobalInt conv_l2g_int;
 
     std::vector<std::string> bitStrings;
+    std::vector<unsigned> bitStrings_breaks(6, 0);
 
     const std::vector<unsigned>& moduleIds = ttmap_->getTriggerTowerModules(po_.tower);
     for (unsigned i=0; i<moduleIds.size(); ++i) {
@@ -63,22 +64,29 @@ int LUTGenerator::makeLocalToGlobal() {
             bitString += std::bitset<8>(newModuleId).to_string();
             bitString += std::bitset<3>(chipId).to_string();
             bitStrings.push_back(bitString);
+
+            unsigned lay16 = compressLayer(decodeLayer(moduleId));
+            bitStrings_breaks.at(lay16) = bitStrings.size();
         }
     }
 
-    // Open text file
-    ofstream txtfile("lut_L2G.txt");
+    for (unsigned i=0; i<bitStrings_breaks.size(); ++i) {
+        // Open text file
+        TString txtname = Form("lut_L2G_l%i.txt", i+5);
+        ofstream txtfile(txtname.Data());
 
-    // Write text file
-    for (std::vector<std::string>::const_iterator it=bitStrings.begin(); it!=bitStrings.end(); ++it) {
-        txtfile << *it << std::endl;
-        if (verbose_ > 2) {
-            std::cout << *it << std::endl;
+        // Write text file
+        std::vector<std::string>::const_iterator it=bitStrings.begin()+(i == 0 ? 0 : bitStrings_breaks.at(i-1));
+        for (; it!=bitStrings.begin() + bitStrings_breaks.at(i); ++it) {
+            txtfile << *it << std::endl;
+            if (verbose_ > 2) {
+                std::cout << *it << std::endl;
+            }
         }
-    }
 
-    // Close text file
-    txtfile.close();
+        // Close text file
+        txtfile.close();
+    }
 
     return 0;
 }
@@ -93,6 +101,7 @@ int LUTGenerator::makeLocalToGlobalStar() {
     LocalToGlobalInt conv_l2g_int;
 
     std::vector<std::string> bitStrings;
+    std::vector<unsigned> bitStrings_breaks(6, 0);
 
     const std::vector<unsigned>& moduleIds = ttmap_->getTriggerTowerModules(po_.tower);
     for (unsigned i=0; i<moduleIds.size(); ++i) {
@@ -127,22 +136,29 @@ int LUTGenerator::makeLocalToGlobalStar() {
             bitString += std::bitset<8>(newModuleId).to_string();
             bitString += std::bitset<3>(chipId).to_string();
             bitStrings.push_back(bitString);
+
+            unsigned lay16 = compressLayer(decodeLayer(moduleId));
+            bitStrings_breaks.at(lay16) = bitStrings.size();
         }
     }
 
-    // Open text file
-    ofstream txtfile("lut_L2GStar.txt");
+    for (unsigned i=0; i<bitStrings_breaks.size(); ++i) {
+        // Open text file
+        TString txtname = Form("lut_L2GStar_l%i.txt", i+5);
+        ofstream txtfile(txtname.Data());
 
-    // Write text file
-    for (std::vector<std::string>::const_iterator it=bitStrings.begin(); it!=bitStrings.end(); ++it) {
-        txtfile << *it << std::endl;
-        if (verbose_ > 2) {
-            std::cout << *it << std::endl;
+        // Write text file
+        std::vector<std::string>::const_iterator it=bitStrings.begin()+(i == 0 ? 0 : bitStrings_breaks.at(i-1));
+        for (; it!=bitStrings.begin()+bitStrings_breaks.at(i); ++it) {
+            txtfile << *it << std::endl;
+            if (verbose_ > 2) {
+                std::cout << *it << std::endl;
+            }
         }
-    }
 
-    // Close text file
-    txtfile.close();
+        // Close text file
+        txtfile.close();
+    }
 
     return 0;
 }
