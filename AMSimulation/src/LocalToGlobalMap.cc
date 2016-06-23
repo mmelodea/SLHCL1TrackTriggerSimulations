@@ -192,6 +192,17 @@ void LocalToGlobalMap::convertInt(const unsigned moduleId, const float strip, co
             conv_r   >>= 1;
         }
     }
+
+    // Store only 18 LSBs, signed
+    conv_phi  &= 0x3ffff;
+    conv_z    &= 0x3ffff;
+    conv_r    &= 0x3ffff;
+
+    // Pad with left 1s if negative
+    conv_phi  |= (conv_phi  & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_z    |= (conv_z    & 0x20000) ? 0xfffffffffffc0000 : 0;
+    conv_r    |= (conv_r    & 0x20000) ? 0xfffffffffffc0000 : 0;
+
     return;
 }
 

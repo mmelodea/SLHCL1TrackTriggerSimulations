@@ -2,6 +2,7 @@
 
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTTrackReader.h"
+#include <bitset>
 
 
 namespace {
@@ -129,6 +130,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 acomb.stubs_bool.clear();
 
                 float conv_r = 0., conv_phi = 0., conv_z = 0.;
+                int64_t conv_r_int = 0, conv_phi_int = 0, conv_z_int = 0;
                 LocalToGlobal conv_l2g;
                 LocalToGlobalInt conv_l2g_int;
 
@@ -140,19 +142,46 @@ int TrackFitter::makeTracks(TString src, TString out) {
                             acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
                             acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
                             acomb.stubs_bool.push_back(true);
+                            acomb.stubs_bitString.push_back("");
                         } else {
                             // Do local-to-global conversion
-                            l2gmap_ -> convert(reader.vb_modId->at(stubRef), reader.vb_coordx->at(stubRef), reader.vb_coordy->at(stubRef), conv_r, conv_phi, conv_z, conv_l2g);
+                            unsigned moduleId = reader.vb_modId   ->at(istub);
+                            float    strip    = reader.vb_coordx  ->at(istub);  // in full-strip unit
+                            float    segment  = reader.vb_coordy  ->at(istub);  // in full-strip unit
+                            float    bend     = reader.vb_trigBend->at(istub);  // in full-strip unit
+                            l2gmap_ -> convert(moduleId, strip, segment, conv_r, conv_phi, conv_z, conv_l2g);
+                            l2gmap_ -> convertInt(moduleId, strip, segment, po_.tower, conv_l2g, conv_r_int, conv_phi_int, conv_z_int, conv_l2g_int);
+
                             acomb.stubs_r   .push_back(conv_r);
                             acomb.stubs_phi .push_back(conv_phi);
                             acomb.stubs_z   .push_back(conv_z);
                             acomb.stubs_bool.push_back(true);
+
+                            // All together this is a 66 bit string for every stub (after AM) going to the track fitter 
+                            // emulator which Marco will interface
+                            //   1 bit for data_valid (in simulation we can just set it to 1 for every stub)
+                            //   18 bits for phi with range of plus/minus 1 radian
+                            //   18 bits for R  with range of plus/minus 1024 cm
+                            //   18 bits for z with  range of plus/minus 1024 cm
+                            //   4 bits for stub bend info
+                            //   7 bits for the strip ID within the module for radial conversion.
+                            int bend_4b = std::round(bend/2);
+
+                            std::string bitString = "";
+                            bitString += std::bitset<1>(int(1)).to_string();
+                            bitString += std::bitset<18>(conv_phi_int).to_string();
+                            bitString += std::bitset<18>(conv_r_int).to_string();
+                            bitString += std::bitset<18>(conv_z_int).to_string();
+                            bitString += std::bitset<4>(bend_4b).to_string();
+                            bitString += std::bitset<7>(halfStripRound(strip)).to_string();
+                            acomb.stubs_bitString.push_back(bitString);
                         }
                     } else {
                         acomb.stubs_r   .push_back(0.);
                         acomb.stubs_phi .push_back(0.);
                         acomb.stubs_z   .push_back(0.);
                         acomb.stubs_bool.push_back(false);
+                        acomb.stubs_bitString.push_back("");
                     }
                 }
 

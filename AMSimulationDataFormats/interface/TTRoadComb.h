@@ -19,6 +19,7 @@ struct TTRoadComb {
     std::vector<float> stubs_phi;
     std::vector<float> stubs_z;
     std::vector<bool>  stubs_bool;
+    std::vector<std::string> stubs_bitString;
 };
 
 
