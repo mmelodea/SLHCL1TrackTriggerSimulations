@@ -165,7 +165,8 @@ int TrackFitter::makeTracks(TString src, TString out) {
                             //   18 bits for z with  range of plus/minus 1024 cm
                             //   4 bits for stub bend info
                             //   7 bits for the strip ID within the module for radial conversion.
-                            int bend_4b = std::round(bend/2);
+                            int bend_4b = int(std::round(bend)) >> 1;
+                            int strip_7b = (halfStripRound(strip)) >> 4;
 
                             std::string bitString = "";
                             bitString += std::bitset<1>(int(1)).to_string();
@@ -173,7 +174,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                             bitString += std::bitset<18>(conv_r_int).to_string();
                             bitString += std::bitset<18>(conv_z_int).to_string();
                             bitString += std::bitset<4>(bend_4b).to_string();
-                            bitString += std::bitset<7>(halfStripRound(strip)).to_string();
+                            bitString += std::bitset<7>(strip_7b).to_string();
                             acomb.stubs_bitString.push_back(bitString);
                         }
                     } else {
