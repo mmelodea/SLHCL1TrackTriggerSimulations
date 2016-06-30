@@ -277,7 +277,8 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
             if (fountain_max_nx_ < nx)
                 fountain_max_nx_ = nx;
         }
-        nsuperstripsPerLayer_ = fountain_max_nx_ * fountain_nz_;
+        //nsuperstripsPerLayer_ = fountain_max_nx_ * fountain_nz_;
+        nsuperstripsPerLayer_ = 1<<12;  // 12-bit superstrip
         break;
 
     case SuperstripType::OPTIMIZED:
