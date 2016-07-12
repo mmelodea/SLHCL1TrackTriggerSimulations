@@ -3,6 +3,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/PatternBankReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubPlusTPReader.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
+#include <bitset>
+
 
 namespace {
 // Join 'layer' and 'superstrip' into one number
@@ -134,6 +136,9 @@ int PatternMatcher::makeRoads(TString src, TString out) {
     std::vector<TTRoad> roads;
     roads.reserve(300);
 
+    std::vector<std::string> stubs_bitString;
+    std::vector<unsigned>    stubs_superstripId;
+
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
@@ -198,15 +203,22 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         // Start pattern recognition
         hitBuffer_.reset();
 
+        stubs_bitString.clear();
+        stubs_superstripId.clear();
+
         float conv_r = 0., conv_phi = 0., conv_z = 0.;
+        int64_t conv_r_int = 0, conv_phi_int = 0, conv_z_int = 0;
         LocalToGlobal conv_l2g;
         LocalToGlobalInt conv_l2g_int;
 
         // Loop over reconstructed stubs
         for (unsigned istub=0; istub<nstubs; ++istub) {
             bool isNotInTower = stubsNotInTower.at(istub);
-            if (isNotInTower)
+            if (isNotInTower) {
+                stubs_bitString.push_back("");
+                stubs_superstripId.push_back(0);
                 continue;
+            }
 
             unsigned moduleId = reader.vb_modId   ->at(istub);
             float    strip    = reader.vb_coordx  ->at(istub);  // in full-strip unit
@@ -242,6 +254,37 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             if (verbose_>2) {
                 std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
                 std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << " ssIdHash: " << ssIdHash << std::endl;
+            }
+
+            if (po_.emu == 0) {
+                stubs_bitString.push_back("");
+                stubs_superstripId.push_back(0);
+            } else {
+                l2gmap_ -> convert(moduleId, strip, segment, conv_r, conv_phi, conv_z, conv_l2g);
+                l2gmap_ -> convertInt(moduleId, strip, segment, po_.tower, conv_l2g, conv_r_int, conv_phi_int, conv_z_int, conv_l2g_int);
+
+                // All together this is a 66 bit string for every stub (after AM) going to the track fitter
+                // emulator which Marco will interface
+                //   1 bit for data_valid (in simulation we can just set it to 1 for every stub)
+                //   18 bits for phi with range of plus/minus 1 radian
+                //   18 bits for R  with range of plus/minus 1024 cm
+                //   18 bits for z with  range of plus/minus 1024 cm
+                //   4 bits for stub bend info
+                //   7 bits for the strip ID within the module for radial conversion.
+                int bend_4b = int(std::round(stub_ds)) >> 1;
+                int strip_7b = (halfStripRound(strip)) >> 4;
+
+                std::string bitString = "";
+                bitString += std::bitset<1>(int(1)).to_string();
+                bitString += std::bitset<18>(conv_phi_int).to_string();
+                bitString += std::bitset<18>(conv_r_int).to_string();
+                bitString += std::bitset<18>(conv_z_int).to_string();
+                bitString += std::bitset<4>(bend_4b).to_string();
+                bitString += std::bitset<7>(strip_7b).to_string();
+                assert(bitString.size() == 66);
+
+                stubs_bitString.push_back(bitString);
+                stubs_superstripId.push_back(ssId);
             }
         }
 
@@ -301,7 +344,10 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         if (! roads.empty())
             ++nKept;
 
-        writer.fill(roads);
+        assert(reader.vb_modId->size() == stubs_bitString.size());
+        assert(reader.vb_modId->size() == stubs_superstripId.size());
+
+        writer.fill(roads, stubs_bitString, stubs_superstripId);
         ++nRead;
     }
 

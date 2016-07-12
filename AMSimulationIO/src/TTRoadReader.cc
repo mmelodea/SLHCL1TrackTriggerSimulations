@@ -8,6 +8,9 @@ using namespace slhcl1tt;
 TTRoadReader::TTRoadReader(int verbose)
 : TTStubPlusTPReader(verbose),
 
+  vb_bitString    (0),
+  vb_superstripId (0),
+
   vr_patternRef   (0),
   vr_tower        (0),
   vr_nstubs       (0),
@@ -22,6 +25,10 @@ int TTRoadReader::init(TString src, TString prefix, TString suffix) {
         return 1;
 
     // Set branch addresses
+    TString prefixStub = "TTStubs_", suffixStub = "";
+    tchain->SetBranchAddress(prefixStub + "bitString"     + suffixStub, &(vb_bitString));
+    tchain->SetBranchAddress(prefixStub + "superstripId"  + suffixStub, &(vb_superstripId));
+
     tchain->SetBranchAddress(prefix + "patternRef"    + suffix, &(vr_patternRef));
     tchain->SetBranchAddress(prefix + "tower"         + suffix, &(vr_tower));
     tchain->SetBranchAddress(prefix + "nstubs"        + suffix, &(vr_nstubs));
@@ -36,6 +43,9 @@ int TTRoadReader::init(TString src, TString prefix, TString suffix) {
 TTRoadWriter::TTRoadWriter(int verbose)
 : BasicWriter(verbose),
 
+  vb_bitString      (new std::vector<std::string>()),
+  vb_superstripId   (new std::vector<unsigned>()),
+
   vr_patternRef     (new std::vector<unsigned>()),
   vr_tower          (new std::vector<unsigned>()),
   vr_nstubs         (new std::vector<unsigned>()),
@@ -48,6 +58,10 @@ TTRoadWriter::~TTRoadWriter() {}
 int TTRoadWriter::init(TChain* tchain, TString out, TString prefix, TString suffix) {
     if (BasicWriter::init(tchain, out))
         return 1;
+
+    TString prefixStub = "TTStubs_", suffixStub = "";
+    ttree->Branch(prefixStub + "bitString"     + suffixStub, &(*vb_bitString));
+    ttree->Branch(prefixStub + "superstripId"  + suffixStub, &(*vb_superstripId));
 
     ttree->Branch(prefix + "patternRef"    + suffix, &(*vr_patternRef));
     ttree->Branch(prefix + "tower"         + suffix, &(*vr_tower));
@@ -79,4 +93,11 @@ void TTRoadWriter::fill(const std::vector<TTRoad>& roads) {
 
     ttree->Fill();
     assert(vr_patternRef->size() == nroads);
+}
+
+void TTRoadWriter::fill(const std::vector<TTRoad>& roads, const std::vector<std::string>& stubs_bitString, const std::vector<unsigned>& stubs_superstripId) {
+    *vb_bitString = stubs_bitString;
+    *vb_superstripId = stubs_superstripId;
+
+    fill(roads);
 }

@@ -15,6 +15,12 @@ class TTRoadReader : public TTStubPlusTPReader {
 
     int init(TString src, TString prefix, TString suffix);
 
+    // Stubs
+    // Adding stubs branches here is inconsistent and ugly, but changing
+    // TTStubReader is problematic now and breaks backward compatibility
+    std::vector<std::string> *                          vb_bitString;
+    std::vector<unsigned> *                             vb_superstripId;
+
     // Roads
     std::vector<unsigned> *                             vr_patternRef;
     std::vector<unsigned> *                             vr_tower;
@@ -35,7 +41,15 @@ class TTRoadWriter : public BasicWriter {
 
     void fill(const std::vector<TTRoad>& roads);
 
+    void fill(const std::vector<TTRoad>& roads, const std::vector<std::string>& stubs_bitString, const std::vector<unsigned>& stubs_superstripId);
+
   protected:
+    // Stubs
+    // Adding stubs branches here is inconsistent and ugly, but changing
+    // TTStubReader is problematic now and breaks backward compatibility
+    std::auto_ptr<std::vector<std::string> >                          vb_bitString;
+    std::auto_ptr<std::vector<unsigned> >                             vb_superstripId;
+
     // Roads
     std::auto_ptr<std::vector<unsigned> >                             vr_patternRef;
     std::auto_ptr<std::vector<unsigned> >                             vr_tower;
