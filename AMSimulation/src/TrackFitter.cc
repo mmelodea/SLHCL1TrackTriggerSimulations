@@ -111,10 +111,10 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
             // Get combinations of stubRefs
             std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
-            for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
-                if (stubRefs.at(ilayer).size() > (unsigned) po_.maxStubs)
-                    stubRefs.at(ilayer).resize(po_.maxStubs);
-            }
+            //for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
+            //    if (stubRefs.at(ilayer).size() > (unsigned) po_.maxStubs)
+            //        stubRefs.at(ilayer).resize(po_.maxStubs);
+            //}
 
             const std::vector<std::vector<unsigned> >& combinations = combinationFactory_.combine(stubRefs);
 

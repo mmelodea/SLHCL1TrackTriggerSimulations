@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
         // Only for pattern matching
         ("maxPatterns"  , po::value<long int>(&option.maxPatterns)->default_value(999999999), "Specfiy max number of patterns")
         ("maxMisses"    , po::value<int>(&option.maxMisses)->default_value(0), "Specify max number of allowed misses")
-        ("maxStubs"     , po::value<int>(&option.maxStubs)->default_value(999999999), "Specfiy max number of stubs per superstrip")
+        ("maxStubs"     , po::value<int>(&option.maxStubs)->default_value(4), "Specfiy max number of stubs per superstrip")
         ("maxRoads"     , po::value<int>(&option.maxRoads)->default_value(999999999), "Specfiy max number of roads per event")
 
         // Only for matrix building
