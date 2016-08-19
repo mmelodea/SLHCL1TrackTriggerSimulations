@@ -53,6 +53,12 @@ float calcIdealZ(float simVz, float simCotTheta, float simChargeOverPt, float r)
     //return simVz + r * simCotTheta;
     return simVz + (1.0 / (mPtFactor * simChargeOverPt) * std::asin(mPtFactor * r * simChargeOverPt)) * simCotTheta;
 }
+
+float calcIdealR(float simVz, float simCotTheta, float simChargeOverPt, float z) {
+    static const float mPtFactor = 0.3*3.8*1e-2/2.0;
+    //return (z - simVz) / simCotTheta;
+    return std::abs(1.0 / (mPtFactor * simChargeOverPt) * std::sin(mPtFactor * (z - simVz) / simCotTheta * simChargeOverPt));
+}
 }
 
 
@@ -171,10 +177,7 @@ int StubCleanerPU::cleanStubs(TString src, TString out) {
                 float idealR   = stub_r;
 
                 if (lay16 >= 6) {  // for endcap
-                    idealR     = (stub_z - simVz) / simCotTheta;
-                    //if (idealR <= 0) {
-                    //    std::cout << Warning() << "Stub ideal r <= 0! moduleId: " << moduleId << " r: " << stub_r << " z: " << stub_z << " simVz: " << simVz << " simCotTheta: " << simCotTheta << std::endl;
-                    //}
+                    idealR     = calcIdealR(simVz, simCotTheta, simChargeOverPt, stub_z);
                     idealPhi   = calcIdealPhi(simPhi, simChargeOverPt, idealR);
                     idealZ     = stub_z;
                 }
