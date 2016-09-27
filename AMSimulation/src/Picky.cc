@@ -95,7 +95,7 @@ unsigned Picky::findRank(unsigned lay16, const float r, const float z) {
     assert(j <= 3);
 
     // j=3 has larger radius than j=2,1,0
-    // j=1,2 are closer to average radius than j=3,4
+    // j=1,2 are closer to average radius than j=0,3
     // For future: in endcap, stubs in PS module should rank higher than stubs in 2S module
     static const float ranks[4] = {2,0,1,3};
     return ranks[j];

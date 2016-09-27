@@ -19,7 +19,7 @@ b_rcoord_cmssw = [22.5913, 35.4772, 50.5402, 68.3101, 88.5002, 107.71]
 
 e_zcoord_tklayout_mm = [1349.445, 1597.452, 1891.039, 2238.583, 2650.00]
 e_zcoord_tklayout = [x*1e-1 for x in e_zcoord_tklayout_mm]  # in cm
-e_zcoord_cmssw = [131.680667, 156.481667, 185.840667, 220.594667, 261.736667]
+e_zcoord_cmssw = [131.344, 156.145, 185.504, 220.258, 261.400]
 
 tt_netas = 6
 tt_nphis = 8
