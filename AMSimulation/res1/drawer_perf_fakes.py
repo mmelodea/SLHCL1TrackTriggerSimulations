@@ -7,11 +7,14 @@ from TrackParametersToTT import *
 #col  = TColor.GetColor("#1f78b4")  # mu0
 #fcol = TColor.GetColor("#a6cee3")  # mu0
 
-col  = TColor.GetColor("#e31a1c")  # nu140
-fcol = TColor.GetColor("#fb9a99")  # nu140
+#col  = TColor.GetColor("#e31a1c")  # nu140
+#fcol = TColor.GetColor("#fb9a99")  # nu140
 
 #col  = TColor.GetColor("#6a3d9a")  # tttt140
 #fcol = TColor.GetColor("#cab2d6")  # tttt140
+
+col  = TColor.GetColor("#1A1AE3")  # merged
+fcol = TColor.GetColor("#9999FB")  # merged
 
 col1 = TColor.GetColor("#BA0000")
 col2 = TColor.GetColor("#CC8000")
