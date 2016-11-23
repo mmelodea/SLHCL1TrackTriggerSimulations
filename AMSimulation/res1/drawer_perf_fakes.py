@@ -36,6 +36,10 @@ def drawer_book(options):
     nbins, xmin, xmax = 400, 0., 1600.*options.xscale
     histos[hname] = TH1F(hname, "; # combinations/tower/BX"         , nbins, xmin, xmax)
 
+    hname = "ncombinations_acb_per_event"
+    nbins, xmin, xmax = 400, 0., 1600.*options.xscale
+    histos[hname] = TH1F(hname, "; # ACB combinations/tower/BX"     , nbins, xmin, xmax)
+
     hname = "ntracks_per_event"
     nbins, xmin, xmax = 200, 0., 200.*options.xscale
     histos[hname] = TH1F(hname, "; # tracks/tower/BX"               , nbins, xmin, xmax)
@@ -87,14 +91,15 @@ def drawer_book(options):
 
     # Change binning
     if options.pu == 0:  # single-track events
-        histos["nroads_per_event"       ].SetBins(40, 0., 40.)
-        histos["ncombinations_per_event"].SetBins(40, 0., 40.)
-        histos["ntracks_per_event"      ].SetBins(40, 0., 40.)
-        histos["ngoods_per_event"       ].SetBins(40, 0., 40.)
-        histos["nduplicates_per_event"  ].SetBins(40, 0., 40.)
-        histos["nfakes_per_event"       ].SetBins(40, 0., 40.)
-        histos["nparts_per_event"       ].SetBins(40, 0., 40.)
-        histos["nfounds_per_event"      ].SetBins(40, 0., 40.)
+        histos["nroads_per_event"           ].SetBins(40, 0., 40.)
+        histos["ncombinations_per_event"    ].SetBins(40, 0., 40.)
+        histos["ncombinations_acb_per_event"].SetBins(40, 0., 40.)
+        histos["ntracks_per_event"          ].SetBins(40, 0., 40.)
+        histos["ngoods_per_event"           ].SetBins(40, 0., 40.)
+        histos["nduplicates_per_event"      ].SetBins(40, 0., 40.)
+        histos["nfakes_per_event"           ].SetBins(40, 0., 40.)
+        histos["nparts_per_event"           ].SetBins(40, 0., 40.)
+        histos["nfounds_per_event"          ].SetBins(40, 0., 40.)
 
     # Style
     for hname, h in histos.iteritems():
@@ -129,6 +134,7 @@ def drawer_project(tree, histos, options):
     tree.SetBranchStatus("AMTTTracks_synMatchCat", 1)
     tree.SetBranchStatus("AMTTTracks_synTpId"    , 1)
     tree.SetBranchStatus("AMTTTracks_patternRef" , 1)
+    tree.SetBranchStatus("AMTTTracks_roadRef"    , 1)
     #tree.SetBranchStatus("AMTTTracks_stubRefs"   , 1)
 
     # Loop over events
@@ -175,22 +181,39 @@ def drawer_project(tree, histos, options):
 
         # Loop over reconstructed roads
         nroads_all = evt.AMTTRoads_patternRef.size()
-        nroads, ncombs = 0, 0
+        nroads, ncombs, ncombs_acb = 0, 0, 0
 
         for iroad in xrange(nroads_all):
             patternRef = evt.AMTTRoads_patternRef[iroad]
             if not (patternRef < options.maxPatterns):
                 continue
 
+            roadRef = iroad
+            if not (roadRef < options.maxRoads):
+                continue
+
             nroads += 1
 
             stubRefs   = evt.AMTTRoads_stubRefs  [iroad]
+            assert(stubRefs.size() == 6)
+
             ncombs_per_road = 1
             for v in stubRefs:
                 n = v.size()
                 if n != 0:
                     ncombs_per_road *= n
             ncombs += ncombs_per_road
+
+            ncombs_acb_per_road = ncombs_per_road
+            is_6oo6 = (sum([v.size() > 0 for v in stubRefs]) == 6)
+            if is_6oo6:
+                ncombs_acb_per_road += (stubRefs[0].size() * stubRefs[1].size() * stubRefs[2].size() * stubRefs[3].size() * stubRefs[4].size())
+                ncombs_acb_per_road += (stubRefs[0].size() * stubRefs[1].size() * stubRefs[2].size() * stubRefs[3].size() * stubRefs[5].size())
+                ncombs_acb_per_road += (stubRefs[0].size() * stubRefs[1].size() * stubRefs[2].size() * stubRefs[4].size() * stubRefs[5].size())
+                ncombs_acb_per_road += (stubRefs[0].size() * stubRefs[1].size() * stubRefs[3].size() * stubRefs[4].size() * stubRefs[5].size())
+                ncombs_acb_per_road += (stubRefs[0].size() * stubRefs[2].size() * stubRefs[3].size() * stubRefs[4].size() * stubRefs[5].size())
+                ncombs_acb_per_road += (stubRefs[1].size() * stubRefs[2].size() * stubRefs[3].size() * stubRefs[4].size() * stubRefs[5].size())
+            ncombs_acb += ncombs_acb_per_road
 
         # Loop over reconstructed tracks
         ntracks_all = evt.AMTTTracks_patternRef.size()
@@ -199,6 +222,10 @@ def drawer_project(tree, histos, options):
         for itrack in xrange(ntracks_all):
             patternRef  = evt.AMTTTracks_patternRef [itrack]
             if not (patternRef < options.maxPatterns):
+                continue
+
+            roadRef     = evt.AMTTTracks_roadRef    [itrack]
+            if not (roadRef < options.maxRoads):
                 continue
 
             synMatchCat = evt.AMTTTracks_synMatchCat[itrack]
@@ -239,22 +266,23 @@ def drawer_project(tree, histos, options):
         if options.verbose:  print ievt, nroads, ncombs, ntracks, ngoods, nduplicates, nfakes, nparts, nfounds
 
         assert(ntracks == ngoods + nduplicates + nfakes)
-        histos["nroads_per_event"       ].Fill(nroads)
-        histos["ncombinations_per_event"].Fill(ncombs)
-        histos["ntracks_per_event"      ].Fill(ntracks)
-        histos["ngoods_per_event"       ].Fill(ngoods)
-        histos["nduplicates_per_event"  ].Fill(nduplicates)
-        histos["nfakes_per_event"       ].Fill(nfakes)
+        histos["nroads_per_event"           ].Fill(nroads)
+        histos["ncombinations_per_event"    ].Fill(ncombs)
+        histos["ncombinations_acb_per_event"].Fill(ncombs_acb)
+        histos["ntracks_per_event"          ].Fill(ntracks)
+        histos["ngoods_per_event"           ].Fill(ngoods)
+        histos["nduplicates_per_event"      ].Fill(nduplicates)
+        histos["nfakes_per_event"           ].Fill(nfakes)
 
         assert(nfounds <= nparts)
-        histos["nparts_per_event"       ].Fill(nparts)
-        histos["nfounds_per_event"      ].Fill(nfounds)
+        histos["nparts_per_event"           ].Fill(nparts)
+        histos["nfounds_per_event"          ].Fill(nfounds)
 
         if nparts:
-            histos["foundrate_per_event"    ].Fill(float(nfounds)/nparts)
+            histos["foundrate_per_event"        ].Fill(float(nfounds)/nparts)
         if ntracks:
-            histos["dupfakerate_per_event"  ].Fill(float(nduplicates+nfakes)/(nduplicates+nfakes+ngoods))
-            histos["fakerate_per_event"     ].Fill(float(nfakes)/(nfakes+ngoods))
+            histos["dupfakerate_per_event"      ].Fill(float(nduplicates+nfakes)/(nduplicates+nfakes+ngoods))
+            histos["fakerate_per_event"         ].Fill(float(nfakes)/(nfakes+ngoods))
 
     tree.SetBranchStatus("*", 1)
     return
@@ -315,9 +343,9 @@ def drawer_draw2(histos, options):
         h2 = histos[hname2]
         h3 = histos[hname3]
 
-        h1.SetLineColor(col1); h1.SetFillColor(fcol1)
-        h2.SetLineColor(col2); h2.SetFillColor(fcol2)
-        h3.SetLineColor(col3); h3.SetFillColor(fcol3)
+        h1.SetLineColor(col1); h1.SetMarkerColor(col1); h1.SetFillColor(fcol1)
+        h2.SetLineColor(col2); h2.SetMarkerColor(col2); h2.SetFillColor(fcol2)
+        h3.SetLineColor(col3); h3.SetMarkerColor(col3); h3.SetFillColor(fcol3)
 
         # Stack
         hstack1 = h1.Clone(hname1 + "_stack")
@@ -397,9 +425,25 @@ def drawer_draw2(histos, options):
         CMS_label()
         save(options.outdir, "%s_norm_%s" % (v, options.ss), dot_root=True)
 
+        # Purity
+        hpurity1 = h1.Clone(hname1 + "_purity")
+        hpurity2 = h2.Clone(hname2 + "_purity")
+        hpurity3 = h3.Clone(hname3 + "_purity")
+
+        hpurity1 = hpurity1     # num = good
+        hpurity3.Add(hpurity1)  # denom = good + fake
+
+        hpurity1.Divide(hpurity3)
+        hpurity1.SetMaximum(1.2); hpurity1.SetMinimum(0)
+        hpurity1.SetStats(0); hpurity1.Draw("p")
+
+        CMS_label()
+        save(options.outdir, "%s_purity_%s" % (v, options.ss), dot_root=True)
+
         donotdelete.append([hstack1, hstack2, hstack3])
         donotdelete.append([hratio1, hratio2, hratio3])
         donotdelete.append([hnorm1, hnorm2, hnorm3])
+        donotdelete.append([hpurity1, hpurity2, hpurity3])
     return
 
 def drawer_sitrep(histos, options):
@@ -455,6 +499,7 @@ if __name__ == '__main__':
     # Add more arguments
     parser.add_argument("ss", help="short name of superstrip definition (e.g. ss256)")
     parser.add_argument("--maxPatterns", type=int, default=999999999, help="number of patterns to reach the desired coverage")
+    parser.add_argument("--maxRoads", type=int, default=999999999, help="number of roads to not truncate")
     parser.add_argument("--minPt", type=float, default=3, help="min pT for gen particle (default: %(default)s)")
     parser.add_argument("--no-tp", action="store_true", help="ignore tracking particles (default: %(default)s)")
     parser.add_argument("--xscale", type=float, default=1, help="scale factor for the x-axis range (default: %(default)s)")

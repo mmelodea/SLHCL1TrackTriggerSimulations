@@ -30,44 +30,34 @@ def drawer_book():
         bank_count = ttree2.count
 
         # Pattern bank
-        ttree1.SetBranchStatus("superstripIds", 0)
+        ttree1.SetBranchStatus("*"        , 0)
+        ttree1.SetBranchStatus("frequency", 1)
         npatterns = ttree1.GetEntries()
-        npoints = 1000
-        pointwidth = npatterns / npoints
+        npoints = 100
+        pointwidth = 1.0 / float(npoints)
 
         x, cov, freq = [], [], []
-        x_i, integral_i = 0, 0
+        x_i, integral_i, point_i = 0, 0, 0
 
         for i in xrange(npatterns):
             ttree1.GetEntry(i)
 
             freq_i = ttree1.frequency
-
-            if i == x_i:
-                cov_i = float(integral_i) / float(bank_count) * bank_coverage
-
-                x.append(x_i)
-                cov.append(cov_i)
-                freq.append(freq_i)
-                if options.verbose:  print "..", x_i, cov_i, freq_i
-
-                x_i += pointwidth
-
-            elif i == npatterns - 1:
-                cov_i = float(integral_i) / float(bank_count) * bank_coverage
-
-                x.append(x_i)
-                cov.append(cov_i)
-                freq.append(freq_i)
-                if options.verbose:  print "..", x_i, cov_i, freq_i
-
-                assert((integral_i + freq_i) == bank_count)
-
+            cov_i = float(integral_i) / float(bank_count) * bank_coverage
+            x_i += 1
             integral_i += freq_i
 
+            if cov_i >= float(point_i) / float(npoints) or i == npatterns - 1:
+                x.append(x_i)
+                cov.append(cov_i)
+                freq.append(freq_i)
+                if options.verbose:  print "..", x_i, cov_i, freq_i
+                point_i += 1
+
+        assert(integral_i == bank_count)
         npatterns_stop = 0
         for x_i, cov_i in izip(x, cov):
-            if cov_i > cov_stop:
+            if cov_i >= cov_stop:
                 npatterns_stop = x_i
                 break
 
@@ -101,27 +91,29 @@ def drawer_draw_cov(superstrips, graphs, options):
 
     hframe = TH1F("hframe", "; # of patterns; running estimate for coverage", 1000, options.xmin, options.xmax)
     hframe.SetStats(0); hframe.SetMinimum(0); hframe.SetMaximum(1.2)
+    hframe.SetNdivisions(524, "Y")  # 24 grid lines from 0 to 1.2
 
     # Style
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_%s" % ss[0]]
+        gr = graphs[("gr_%s" % ss[0])]
         gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
         gr.SetLineColor(paletteSet1[i+palette_offset])
+    tline.SetLineStyle(1)
 
     # Legend
     moveLegend(0.6,0.15,0.9,0.15+len(superstrips)*0.05); tlegend.Clear()
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_%s" % ss[0]]
+        gr = graphs[("gr_%s" % ss[0])]
         tlegend.AddEntry(gr, parse_ss(ss[0]), "l")
 
     # Draw
     hframe.Draw()
     gPad.SetLogy(options.logy)
-    for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
-        tline.DrawLine(options.xmin, y, options.xmax, y)
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_%s" % ss[0]]
+        gr = graphs[("gr_%s" % ss[0])]
         gr.Draw("C")
+    tline.DrawLine(options.xmin, 1.0, options.xmax, 1.0)
+    gPad.RedrawAxis("g"); hframe.SetNdivisions(512, "Y")  # only change num of labels, not the grid lines
     tlegend.Draw()
     CMS_label()
     save(options.outdir, "coverage_%s" % (superstrips[0][0]), dot_root=True)
@@ -129,10 +121,8 @@ def drawer_draw_cov(superstrips, graphs, options):
     # Zoom in
     hframe.Draw()
     hframe.GetXaxis().SetRangeUser(0, options.xmax/50)
-    for y in [0.5, 0.8, 0.9, 0.95, 1.0]:
-        tline.DrawLine(options.xmin, y, options.xmax/50, y)
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_%s" % ss[0]]
+        gr = graphs[("gr_%s" % ss[0])]
         gr.Draw("C")
     tlegend.Draw()
     CMS_label()
@@ -149,22 +139,22 @@ def drawer_draw_freq(superstrips, graphs, options):
 
     # Style
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_freq_%s" % ss[0]]
+        gr = graphs[("gr_freq_%s" % ss[0])]
         gr.SetLineWidth(2); gr.SetLineStyle(1); gr.SetMarkerSize(0)
         gr.SetLineColor(paletteSet1[i+palette_offset])
 
     # Legend
     moveLegend(0.6,0.15,0.9,0.15+len(superstrips)*0.05); tlegend.Clear()
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_freq_%s" % ss[0]]
+        gr = graphs[("gr_freq_%s" % ss[0])]
         tlegend.AddEntry(gr, parse_ss(ss[0]), "l")
 
     # Draw
     hframe.Draw()
     gPad.SetLogy(options.logy)
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_freq_%s" % ss[0]]
-        gr.Draw("C")
+        gr = graphs[("gr_freq_%s" % ss[0])]
+        gr.Draw("L")
     tlegend.Draw()
     CMS_label()
     save(options.outdir, "frequency_%s" % (superstrips[0][0]), dot_root=True)
@@ -173,8 +163,8 @@ def drawer_draw_freq(superstrips, graphs, options):
     hframe.Draw()
     hframe.GetXaxis().SetRangeUser(0, options.xmax/50)
     for i, ss in enumerate(superstrips):
-        gr = graphs["gr_freq_%s" % ss[0]]
-        gr.Draw("C")
+        gr = graphs[("gr_freq_%s" % ss[0])]
+        gr.Draw("L")
     tlegend.Draw()
     CMS_label()
     save(options.outdir, "frequency_zoom_%s" % (superstrips[0][0]), dot_root=True)
@@ -191,7 +181,7 @@ def drawer_sitrep(superstrips, graphs, options):
         print '{0:9} {1:10d}  {2:5.4f}'.format(ss[0], ss[1], ss[2])
     print
     for i, ss in enumerate(superstrips):
-        print '{0:9} {1:10d}  {2:5.4f}'.format(ss[0], my_ceil(ss[4]), cov_stop)
+        print '{0:9} {1:10d}  {2:5.4f}'.format(ss[0], ss[4], cov_stop)
 
 
 
@@ -204,6 +194,8 @@ def main(options):
     gStyle.SetPadRightMargin(0.1)
     gStyle.SetTitleSize(0.05, "Y")
     gStyle.SetNdivisions(510, "Y")
+    gStyle.SetPadGridX(True)
+    gStyle.SetPadGridY(True)
 
     # Process
     (superstrips, graphs) = drawer_book()
@@ -234,9 +226,7 @@ if __name__ == '__main__':
     parser.add_argument("infile8", nargs="?", default="", help="more input file")
     parser.add_argument("infile9", nargs="?", default="", help="more input file")
     parser.add_argument("--xmin", type=float, default=0. , help="x range")
-    parser.add_argument("--xmax", type=float, default=5e7, help="x range")
-    parser.add_argument("--ymin", type=float, default=0. , help="y range")
-    parser.add_argument("--ymax", type=float, default=5e7, help="y range")
+    parser.add_argument("--xmax", type=float, default=2e7, help="x range")
 
     # Parse default arguments
     options = parser.parse_args()

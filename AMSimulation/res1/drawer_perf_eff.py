@@ -188,19 +188,17 @@ def drawer_project(tree, histos, options):
         for itrack in xrange(ntracks_all):
             trigger = False
 
-            synMatchCat = evt.AMTTTracks_synMatchCat[itrack]
-            synTpId     = evt.AMTTTracks_synTpId    [itrack]
-            if synMatchCat == 1:
-                trigger = True
-
             patternRef  = evt.AMTTTracks_patternRef [itrack]
-            if not (patternRef < options.maxPatterns):
-                trigger = False
+            synMatchCat = evt.AMTTTracks_synMatchCat[itrack]
+            if patternRef < options.maxPatterns:
+                if synMatchCat == 1:  # good track
+                    trigger = True
 
             track_pt    = evt.AMTTTracks_pt         [itrack]
             track_eta   = evt.AMTTTracks_eta        [itrack]
             #track_chi2  = evt.AMTTTracks_chi2       [itrack]
             #track_ndof  = evt.AMTTTracks_ndof       [itrack]
+            synTpId     = evt.AMTTTracks_synTpId    [itrack]
 
             if trigger:
                 trkparts_trigger[synTpId] = True
@@ -311,6 +309,7 @@ def drawer_draw(histos, options):
             ymin, ymax = 0., 1.2
             h1 = h.GetCopyTotalHisto(); h1.SetName(h1.GetName()+"_frame"); h1.Reset()
             h1.SetMinimum(ymin); h1.SetMaximum(ymax)
+            h1.SetNdivisions(524, "Y")  # 24 grid lines from 0 to 1.2
             h1.SetStats(0); h1.Draw()
 
             xmin, xmax = h1.GetXaxis().GetXmin(), h1.GetXaxis().GetXmax()
@@ -329,6 +328,7 @@ def drawer_draw(histos, options):
 
             h.gr = h.CreateGraph()
             h.gr.Draw("p")
+            gPad.RedrawAxis("g"); h1.SetNdivisions(512, "Y")  # only change num of labels, not the grid lines
 
         elif h.ClassName() == "TH1F":
             ymax = h.GetMaximum() * 1.4
