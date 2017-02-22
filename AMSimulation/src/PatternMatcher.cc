@@ -231,7 +231,7 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             hitBuffer_.insert(lay16, ssId, istub);
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
+                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << " clusRef0: " << reader.vb_clusRef0->at(istub) << " clusRef1: " << reader.vb_clusRef1->at(istub) << std::endl;
                 std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << std::endl;
             }
 

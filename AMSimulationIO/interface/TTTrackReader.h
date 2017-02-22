@@ -79,6 +79,8 @@ public:
     std::vector<float> *          vb_coordy;        // stub local z (barrel) or r (endcap)
     std::vector<float> *          vb_trigBend;      // stub local bend distance (a.k.a. delta-s)
     std::vector<unsigned> *       vb_modId;         // stub module ID
+    std::vector<unsigned> *       vb_clusRef0;      // stub inner cluster index
+    std::vector<unsigned> *       vb_clusRef1;      // stub outer cluster index
     std::vector<int> *            vb_tpId;          // stub tracking particle ID
     std::vector<std::string> *    vb_bitString;     // stub info encoded as in firmware
     std::vector<unsigned> *       vb_superstripId;  // stub superstrip ID
@@ -169,6 +171,8 @@ TTTrackReaderT<T>::TTTrackReaderT(int verbose) :
     vb_coordy           (0),
     vb_trigBend         (0),
     vb_modId            (0),
+    vb_clusRef0         (0),
+    vb_clusRef1         (0),
     vb_tpId             (0),
     vb_bitString        (0),
     vb_superstripId     (0),
@@ -285,6 +289,8 @@ void TTTrackReaderT<T>::init(TString src) {
         tchain_->SetBranchStatus("TTStubs_coordy"    , 1);
         tchain_->SetBranchStatus("TTStubs_trigBend"  , 1);
         tchain_->SetBranchStatus("TTStubs_modId"     , 1);
+        tchain_->SetBranchStatus("TTStubs_clusRef0"  , 1);
+        tchain_->SetBranchStatus("TTStubs_clusRef1"  , 1);
         tchain_->SetBranchStatus("TTStubs_tpId"      , 1);
     }
 
@@ -327,6 +333,8 @@ void TTTrackReaderT<T>::init(TString src) {
         tchain_->SetBranchAddress("TTStubs_coordy"    , &(vb_coordy));
         tchain_->SetBranchAddress("TTStubs_trigBend"  , &(vb_trigBend));
         tchain_->SetBranchAddress("TTStubs_modId"     , &(vb_modId));
+        tchain_->SetBranchAddress("TTStubs_clusRef0"  , &(vb_clusRef0));
+        tchain_->SetBranchAddress("TTStubs_clusRef1"  , &(vb_clusRef1));
         tchain_->SetBranchAddress("TTStubs_tpId"      , &(vb_tpId));
     }
     //
@@ -390,6 +398,8 @@ void TTTrackReaderT<T>::nullStubs(const std::vector<bool>& nulling) {
     nullVectorElements(vb_coordy    , nulling);
     nullVectorElements(vb_trigBend  , nulling);
     //nullVectorElements(vb_modId     , nulling);  // don't null this guy
+    nullVectorElements(vb_clusRef0  , nulling);
+    nullVectorElements(vb_clusRef1  , nulling);
     nullVectorElements(vb_tpId      , nulling);
 }
 
