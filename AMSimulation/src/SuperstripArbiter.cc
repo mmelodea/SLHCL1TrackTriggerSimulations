@@ -99,7 +99,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
     // Parse the definition string
     if (definition.Contains("_")) {
         unsigned pos = definition.Index("_");
-        unsigned len = definition.Length();
+        //unsigned len = definition.Length();
         TString token1 = definition(0,2);
         TString token2 = definition(2,pos-2);
         TString token3 = definition(pos+1,2);
@@ -108,10 +108,10 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 	
 	TString token5, token6;
 
-	unsigned posL5 = definition.Index("L5x");
-	if (posL5>0) token5  = definition(posL5+3,1);
-	unsigned posL10 = definition.Index("L10x");
-	if (posL10>0) token6  = definition(posL10+4,1);
+	int posL5 = definition.Index("L5x");
+	if (posL5 != -1) token5 = definition(posL5+3,1);
+	int posL10 = definition.Index("L10x");
+	if (posL10 != -1) token6 = definition(posL10+4,1);
 	
         if (token1 == "ss") {
             sstype_ = SuperstripType::FIXEDWIDTH;
