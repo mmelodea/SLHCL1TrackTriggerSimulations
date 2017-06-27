@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
         if (vm.count("cfg")) {
             const std::vector<std::string>& cfgfiles = vm["cfg"].as<std::vector<std::string> >();
             for (unsigned i=0; i<cfgfiles.size(); ++i) {
-                ifstream ifs(cfgfiles.at(i).c_str());
+                std::ifstream ifs(cfgfiles.at(i).c_str());
                 po::store(po::parse_config_file(ifs, cfgfile_options), vm);
             }
         }
