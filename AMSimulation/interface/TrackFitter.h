@@ -15,6 +15,7 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/DuplicateRemoval.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ParameterDuplicateRemoval.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MCTruthAssociator.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HTMemory.h"
 using namespace slhcl1tt;
 
 
@@ -43,6 +44,12 @@ class TrackFitter {
         }
 
         combinationBuilderFactory_ = std::make_shared<CombinationBuilderFactory>(po_.FiveOfSix);
+
+        try {
+            htm_.reset(new HTMemory("htm", po.htmfile));
+        } catch (...) {
+            throw;
+        }
     }
 
     // Destructor
@@ -77,6 +84,9 @@ class TrackFitter {
 
     // MC truth associator
     MCTruthAssociator truthAssociator_;
+
+    // Hough Transform filter
+    std::unique_ptr<HTMemory> htm_;
 };
 
 #endif

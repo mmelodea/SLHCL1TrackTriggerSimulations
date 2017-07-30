@@ -21,6 +21,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  matrixfile: "   << po.matrixfile
       << "  roadfile: "     << po.roadfile
       << "  trackfile: "    << po.trackfile
+      << "  htmfile: "      << po.htmfile
 
       << "  verbose: "      << po.verbose
       << "  speedup: "      << po.speedup
@@ -33,6 +34,7 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  tower: "        << po.tower
       << "  superstrip: "   << po.superstrip
       << "  algo: "         << po.algo
+      << "  htmconf: "      << po.htmconf
 
       << "  minPt: "        << po.minPt
       << "  maxPt: "        << po.maxPt

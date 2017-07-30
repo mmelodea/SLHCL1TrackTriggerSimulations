@@ -14,6 +14,7 @@ struct ProgramOption {
     std::string matrixfile;
     std::string roadfile;
     std::string trackfile;
+    std::string htmfile;
 
     int         verbose;
     int         speedup;
@@ -26,6 +27,7 @@ struct ProgramOption {
     unsigned    tower;
     std::string superstrip;
     std::string algo;
+    std::string htmconf;
 
     float       minPt;
     float       maxPt;

@@ -109,8 +109,13 @@ int TrackFitter::makeTracks(TString src, TString out) {
             const unsigned patternRef = reader.vr_patternRef->at(iroad);
             if (patternRef >= (unsigned) po_.maxPatterns)  continue;
 
+            // Apply Hough Transform filter
+            std::vector<std::vector<unsigned> > stubRefs;
+            const HTMemory::Candidate& htm_cand = htm_->getBestCandidate_amsim(po_.htmconf, reader.vr_stubRefs->at(iroad), *reader.vb_z, stubRefs);
+            if (htm_cand.nTotalHits == 0)  continue;
+
             // Get combinations of stubRefs
-            std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
+            //std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
             std::vector<std::vector<float> > stubDeltaS(stubRefs.size(), std::vector<float>());
             for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
                 for(unsigned istub=0; istub<stubRefs.at(ilayer).size(); ++istub) {
