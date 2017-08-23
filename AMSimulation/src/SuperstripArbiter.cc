@@ -99,7 +99,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
     // Parse the definition string
     if (definition.Contains("_")) {
         unsigned pos = definition.Index("_");
-        //unsigned len = definition.Length();
+        unsigned len = definition.Length();
         TString token1 = definition(0,2);
         TString token2 = definition(2,pos-2);
         TString token3 = definition(pos+1,2);
@@ -108,10 +108,10 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 	
 	TString token5, token6;
 
-	int posL5 = definition.Index("L5x");
-	if (posL5 != -1) token5 = definition(posL5+3,1);
-	int posL10 = definition.Index("L10x");
-	if (posL10 != -1) token6 = definition(posL10+4,1);
+	unsigned posL5 = definition.Contains("L5x");
+	if (posL5>0) token5  = definition(posL5+3,1);
+	unsigned posL10 = definition.Contains("L10x");
+	if (posL10>0) token6  = definition(posL10+4,1);
 	
         if (token1 == "ss") {
             sstype_ = SuperstripType::FIXEDWIDTH;
@@ -306,7 +306,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 	    fountain_max_nx_ = nx;
         }
         //nsuperstripsPerLayer_ = fountain_max_nx_ * fountain_nz_;
-        nsuperstripsPerLayer_ = 1<<12;  // 12-bit superstrip
+        nsuperstripsPerLayer_ = 1<<11;  // 12-bit superstrip
 	print();
         break;
 
@@ -330,7 +330,7 @@ void SuperstripArbiter::setDefinition(TString definition, unsigned tt, const Tri
 	    fountain_max_nx_ = nx;
         }
         //nsuperstripsPerLayer_ = fountain_max_nx_ * fountain_nz_;
-        nsuperstripsPerLayer_ = 1<<12;  // 12-bit superstrip
+        nsuperstripsPerLayer_ = 1<<11;  // 12-bit superstrip
 	print();
         break;
 
@@ -354,14 +354,14 @@ unsigned SuperstripArbiter::superstripLocal(unsigned moduleId, float strip, floa
 }
 
 // _____________________________________________________________________________
-unsigned SuperstripArbiter::superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds) const {
+unsigned SuperstripArbiter::superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds, unsigned nDSbins, std::string DSM) const {
     switch (sstype_) {
     case SuperstripType::PROJECTIVE:
-        return superstripProjective(moduleId, r, phi, z, ds);
+      return superstripProjective(moduleId, r, phi, z, ds);
         break;
 
     case SuperstripType::FOUNTAIN:
-        return superstripFountain(moduleId, r, phi, z, ds);
+      return superstripFountain(moduleId, r, phi, z, ds, nDSbins, DSM);
         break;
 
     case SuperstripType::FOUNTAINOPT:
@@ -433,7 +433,7 @@ unsigned SuperstripArbiter::superstripProjective(unsigned moduleId, float r, flo
 }
 
 // _____________________________________________________________________________
-unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float phi, float z, float ds) const {
+unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float phi, float z, float ds, unsigned nDSbins, std::string DSM) const {
     unsigned lay16    = compressLayer(decodeLayer(moduleId));
 
     // For barrel, correct phi based on ds and dr
@@ -445,12 +445,75 @@ unsigned SuperstripArbiter::superstripFountain(unsigned moduleId, float r, float
 
     int i_phi = std::floor((phi - phiMins_.at(lay16)) / fountain_phiBins_.at(lay16));
     int i_z   = std::floor((z - zMins_.at(lay16)) / fountain_zBins_.at(lay16));
+    //std::cout<<"i_phi: "<<i_phi<<"\t i_z: "<<i_z<<std::endl;
 
     i_phi     = (i_phi < 0) ? 0 : (i_phi >= n_phi) ? (n_phi - 1) : i_phi;  // proper range
     i_z       = (i_z   < 0) ? 0 : (i_z   >= n_z  ) ? (n_z   - 1) : i_z;    // proper range
+    //std::cout<<"i_phi: "<<i_phi<<"\t i_z: "<<i_z<<std::endl;
 
-    //unsigned ss = i_z * n_phi + i_phi;
-    unsigned ss = ((i_z & 0x7) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
+    int i_ds = 0; //if not request to apply deltaS approach to a layer
+
+    /*3bins, central_bin=7bins wide, original Sergo's approach I implemented (the outer bins are not divided)*/
+    if(DSM == "ASYM" && nDSbins > 1){
+      float bin_limit = ((nDSbins-1)/2.)*0.5;//0.5 = half strip                                                                                    
+      if (ds < -bin_limit) i_ds = 1;
+      if (ds > bin_limit) i_ds = 2;
+    }
+
+
+    //This approach is applied by layer
+    if(DSM == "SYM" && nDSbins > 1){
+      /*3bins_9binWide*/
+      if(nDSbins == 3){
+	if(ds <= -2.5) i_ds = 1;
+	if(ds >= 2.5) i_ds = 2;
+      }
+
+    
+      /*5bins_7binWide*/
+      if(nDSbins == 5){
+	if(ds <= -2.0 && ds >= -5.0) i_ds = 1;
+	if(ds <= -5.5) i_ds = 2;
+	if(ds >= 2.0 && ds <= 5.0) i_ds = 3;
+	if(ds >= 5.5) i_ds = 4;      
+      }
+
+
+      /*7bins_5binWide*/
+      if(nDSbins == 7){
+	if(ds <= -1.5 && ds >= -3.5) i_ds = 1;
+	if(ds <= -4.0 && ds >= -6.0) i_ds = 2;
+	if(ds <= -6.5) i_ds = 3;
+	if(ds >= 1.5 && ds <= 3.5) i_ds = 4;
+	if(ds >= 4.0 && ds <= 6.0) i_ds = 5;
+	if(ds >= 6.5) i_ds = 6;
+      }
+    
+    
+      /*9bins_3binWide config*/
+      if(nDSbins == 9){
+	if(ds <= -1.0 && ds >= -2) i_ds = 1;
+	if(ds <= -2.5 && ds >= -3.5) i_ds = 2;
+	if(ds <= -4.0 && ds >= -5.0) i_ds = 3;
+	if(ds <= -5.5) i_ds = 4;
+	if(ds >= 1.0 && ds <= 2) i_ds = 5;
+	if(ds >= 2.5 && ds <= 3.5) i_ds = 6;
+	if(ds >= 4.0 && ds <= 5.0) i_ds = 7;
+	if(ds >= 5.5) i_ds = 8;
+      }
+    }
+    
+    if((nDSbins != 1 && nDSbins != 3 && nDSbins != 5 && nDSbins != 7 && nDSbins != 9) || (DSM != "ASYM" && DSM != "SYM")){
+      throw std::invalid_argument( "[ERROR] Not allowed deltaS ou deltaSM! Allowed values for deltaS are [1,3,5,7,9] and for deltaSM are [ASYM,SYM]." );
+    }
+
+
+    unsigned ss = i_ds * n_phi + i_phi;
+    //unsigned ss = ((i_z & 0x7) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
+    // unsigned ss =(((i_ds >> 4 ) & 0x1) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
+    //unsigned ss =((i_ds & 0x3) << 9) | (i_phi & 0x1ff);  // use magic number of 512 (= 1<<9)
+
+    //std::cout<<"ds = "<<ds<<"\tss = "<<ss<<std::endl;
     return ss;
 }
 

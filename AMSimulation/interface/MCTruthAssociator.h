@@ -33,7 +33,7 @@ namespace slhcl1tt {
 class MCTruthAssociator {
   public:
     // Constructor
-    MCTruthAssociator();
+    MCTruthAssociator(){}
 
     // Destructor
     ~MCTruthAssociator() {}
@@ -42,9 +42,9 @@ class MCTruthAssociator {
     enum ParticleCategory { NOTFOUND=-1, FOUND=1 };
     enum TrackCategory    { FAKE=-2, DUPLICATE=-1, GOOD=1 };
 
-    void associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks);
+    void associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks, float match_chi2_cut);
 
-    bool accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality);
+    bool accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality, float match_chi2_cut);
 
     // Debug
     void print();

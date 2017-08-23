@@ -53,6 +53,18 @@ bool PrincipalCuts(std::vector<float> princes){
   }
   return pass;
 }
+
+
+bool AcceptTrack(int ndof, float trackPt, float tfchi2){
+    if( (ndof == 8 && tfchi2 < 20.2) ||
+	(ndof == 6 && ((trackPt >= 3 && trackPt < 5 && tfchi2 < 15.8) || (trackPt >= 5 && trackPt < 10 && tfchi2 < 8.5) ||
+		       (trackPt >= 10 && trackPt < 13 && tfchi2 < 54.9) || (trackPt >= 13 && trackPt < 15 && tfchi2 < 36.1) ||
+		       (trackPt >= 15 && trackPt < 20 && tfchi2 < 24.7) || (trackPt >= 20 && trackPt < 25 && tfchi2 < 18.6) ||
+		       (trackPt >= 25 && trackPt < 30 && tfchi2 < 14.4) || (trackPt >= 30 && tfchi2 < 11.4))) ) return true;
+
+    else return false;
+}
+
 }
 
 
@@ -102,20 +114,19 @@ int TrackFitter::makeTracks(TString src, TString out) {
         // _____________________________________________________________________
         // Track fitters taking fit combinations
 
+	//For Luciano's combination truncation idea
+	unsigned ncombs_per_event = 0;
+
         // Loop over the roads
+	unsigned accumulated_combs = 0; //counts the number of accumulated combinations/event
         for (unsigned iroad=0; iroad<nroads; ++iroad) {
             if (iroad >= (unsigned) po_.maxRoads)  break;
 
             const unsigned patternRef = reader.vr_patternRef->at(iroad);
             if (patternRef >= (unsigned) po_.maxPatterns)  continue;
 
-            // Apply Hough Transform filter
-            std::vector<std::vector<unsigned> > stubRefs;
-            const HTMemory::Candidate& htm_cand = htm_->getBestCandidate_amsim(po_.htmconf, reader.vr_stubRefs->at(iroad), *reader.vb_z, stubRefs);
-            if (htm_cand.nTotalHits == 0)  continue;
-
             // Get combinations of stubRefs
-            //std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
+            std::vector<std::vector<unsigned> > stubRefs = reader.vr_stubRefs->at(iroad);
             std::vector<std::vector<float> > stubDeltaS(stubRefs.size(), std::vector<float>());
             for (unsigned ilayer=0; ilayer<stubRefs.size(); ++ilayer) {
                 for(unsigned istub=0; istub<stubRefs.at(ilayer).size(); ++istub) {
@@ -123,6 +134,19 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     stubDeltaS.at(ilayer).push_back(reader.vb_trigBend->at(stubRef));
                 }
             }
+
+
+	    //For Luciano's combination truncation idea
+	    unsigned ncombs_per_road = 1;
+	    unsigned Nlayers = stubRefs.size();
+	    for(unsigned ilayer=0; ilayer<Nlayers; ++ilayer){
+	      unsigned Nstubs = stubRefs.at(ilayer).size();
+	      if(Nstubs > 0) ncombs_per_road *= Nstubs;
+	    }
+	    ncombs_per_event += ncombs_per_road;
+	    if(ncombs_per_event >= (unsigned) po_.maxCombsPreCB) break;
+
+
 
             // Choose either the normal combination building or the 5/6 permutations per 6/6 road in addition
             // and/or pairwise Delta Delta S cleaning (PDDS)
@@ -144,8 +168,11 @@ int TrackFitter::makeTracks(TString src, TString out) {
             }
 
             // Loop over the combinations
+	    //std::cout<<std::endl;
             for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
-                if (icomb >= (unsigned) po_.maxCombs)  break;
+	      //if (icomb >= (unsigned) po_.maxCombs)  break; //original implementation - truncate nCombs/road
+	        accumulated_combs += 1;
+                if (accumulated_combs >= (unsigned) po_.maxCombs)  break; //implementation according Sergo&Luciano - truncate nCombs/event
 
                 // Create and set TTRoadComb
                 TTRoadComb acomb;
@@ -194,10 +221,16 @@ int TrackFitter::makeTracks(TString src, TString out) {
                 atrack.setPtSegment (acomb.ptSegment);
                 atrack.setHitBits   (acomb.hitBits);
                 atrack.setStubRefs  (acomb.stubRefs);
+		
 
                 if (!po_.CutPrincipals) {
-                    if (atrack.chi2Red() < po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
-                        tracks.push_back(atrack);
+		  //if (atrack.chi2Red() < po_.maxChi2){  // reduced chi^2 = chi^2 / ndof
+                  //      tracks.push_back(atrack);
+		  //}
+		  ///Luciano's suggestion: cut separately according to combination logic
+		  if(AcceptTrack(atrack.ndof(), atrack.pt(), atrack.chi2())){
+		    tracks.push_back(atrack);
+		  }
                 } else {
                     if (PrincipalCuts(atrack.principals()))
                         tracks.push_back(atrack);
@@ -207,7 +240,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
             }
         }  // loop over the roads
 
-        std::sort(tracks.begin(), tracks.end(), sortByPt);
+        //std::sort(tracks.begin(), tracks.end(), sortByPt);
 
 
         if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # tracks: " << tracks.size() << std::endl;
@@ -228,8 +261,16 @@ int TrackFitter::makeTracks(TString src, TString out) {
         // Classify tracks as duplicates or not (for duplicate removal)
         // In the algorithm, AM tracks are sorted by chi2 (used to be matching logic and pT)
         // ---------------------------------------------------------------------
+	//std::cout<<"-------- BEFORE DR ---------------"<<std::endl;
+        //for (unsigned int itrack = 0; itrack < tracks.size(); itrack++){
+	//std::cout<<"Event: "<<ievt<<", roadRef: "<<tracks.at(itrack).roadRef()<<", combRef: "<<tracks.at(itrack).combRef()<<", stubs: "<<tracks.at(itrack).stubRefs()[0]<<"/"<<tracks.at(itrack).stubRefs()[1]<<"/"<<tracks.at(itrack).stubRefs()[2]<<"/"<<tracks.at(itrack).stubRefs()[3]<<"/"<<tracks.at(itrack).stubRefs()[4]<<"/"<<tracks.at(itrack).stubRefs()[5]<<", chi2/ndof: "<<tracks.at(itrack).chi2Red()<<std::endl;
+        //}
         DuplicateRemoval flagDuplicates;
         if (po_.rmDuplicate != -1) flagDuplicates.checkTracks(tracks, po_.rmDuplicate);
+	//for (unsigned int itrack = 0; itrack < tracks.size(); itrack++){
+	//std::cout<<"Event: "<<ievt<<", roadRef: "<<tracks.at(itrack).roadRef()<<", combRef: "<<tracks.at(itrack).combRef()<<", chi2/ndof: "<<tracks.at(itrack).chi2Red()<<std::endl;
+	//}
+
 
         //----------------------------------------------------------------------
         // Identify and flag duplicates by defining a track-parameter space
@@ -241,7 +282,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 
         // _____________________________________________________________________
         // Track categorization
-
+	MCTruthAssociator truthAssociator_;
         if (po_.speedup<1) {
             const unsigned nparts = reader.vp2_primary->size();
             if (verbose_>2)  std::cout << Debug() << "... evt: " << ievt << " # particles: " << nparts << std::endl;
@@ -278,7 +319,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
                     if (verbose_>3)  std::cout << Debug() << "... ... part: " << ipart << " primary: " << primary << " " << trkParts.back();
                 }
             }
-            truthAssociator_.associate(trkParts, tracks);
+            truthAssociator_.associate(trkParts, tracks, po_.maxChi2Match);
         }
 
         writer.fillTracks(tracks);

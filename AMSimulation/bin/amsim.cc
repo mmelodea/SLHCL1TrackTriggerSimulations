@@ -111,25 +111,33 @@ int main(int argc, char **argv) {
 
         // Only for track fitting
         ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(14.6), "Specify maximum reduced chi-squared")  // Marco De Mattia recommends 14.6 as a reasonable cut value
+
+        ("maxRedChi2_6out6", po::value<float>(&option.maxRedChi2_6out6)->default_value(2.5), "Specify maximum reduced chi2 for logic 6/6")  //Luciano recommends maxChi2 = 20.0 --> redChi2 = 2.5
+        ("maxRedChi2_5out6", po::value<float>(&option.maxRedChi2_5out6)->default_value(3.8), "Specify maximum reduced chi2 for logic 5/6")  //Luciano recommends maxChi2 = 22.8 --> redChi2 = 3.8
+
         ("CutPrincipals", po::bool_switch(&option.CutPrincipals)->default_value(false), "replace chi**2 cut with principals cut")
         ("minNdof"      , po::value<int>(&option.minNdof)->default_value(1), "Specify minimum degree of freedom")
-        ("maxCombs"     , po::value<int>(&option.maxCombs)->default_value(999999999), "Specfiy max number of combinations per road")
+        ("maxCombs"     , po::value<int>(&option.maxCombs)->default_value(999999999), "Specfiy max number of combinations per event")
+        ("maxCombsPreCB", po::value<int>(&option.maxCombsPreCB)->default_value(999999999), "Specfiy max number of combinations per event before CB acts")
         ("maxTracks"    , po::value<int>(&option.maxTracks)->default_value(999999999), "Specfiy max number of tracks per event")
 
         // Only for Duplicate Flag
         ("rmDuplicate", po::value<int>(&option.rmDuplicate)->default_value(2), "Duplicate removal option. The argument is the number of max stubs allowed to be shared between AM tracks")
+        //Sets the matchChi2 cut
+        ("maxChi2Match"      , po::value<float>(&option.maxChi2Match)->default_value(40.0), "Specify maximum reduced match chi-squared")
+
+        //Pattern building using stub bend information
+        ("deltaS", po::value<int>(&option.deltaS)->default_value(111111), "Option to build pattern using stub bend info for each layer specified")
+        ("deltaSM", po::value<std::string>(&option.deltaSM)->default_value("ASYM"), "Delta S bins division method: CB affects only central bin (only 3 bins), ALL allows to subdivide the deltaS range")
+
 
         // Only for parameter-based duplicate removal
         ("rmParDuplicate", po::bool_switch(&option.rmParDuplicate)->default_value(false), "Parameter-based duplicate removal switch")
 
-        // Only for alternative combination builder configuration
+        //Only for alternative combination builder configuration
         ("oldCB", po::bool_switch(&option.oldCB)->default_value(true), "Use the old combination builder")
         ("FiveOfSix", po::bool_switch(&option.FiveOfSix)->default_value(true), "Do all 5/6 permutations of 6/6 roads in addition")
         ("PDDS", po::bool_switch(&option.PDDS)->default_value(false), "Switch on pairwise Delta Delta S combination cleaning")
-
-        // Only for Hough Transform filter
-        ("htm"          , po::value<std::string>(&option.htmfile), "Specify file containing the Hough Transform filter config")
-        ("htmconf"      , po::value<std::string>(&option.htmconf)->default_value("H8x8"), "Specify the Hough Transform filter config (default: H8x8)")
 
         // Only for NTupleMaker
         ("no-trim"      , po::bool_switch(&option.no_trim)->default_value(false), "Do not trim ntuple branches")
@@ -171,7 +179,7 @@ int main(int argc, char **argv) {
         if (vm.count("cfg")) {
             const std::vector<std::string>& cfgfiles = vm["cfg"].as<std::vector<std::string> >();
             for (unsigned i=0; i<cfgfiles.size(); ++i) {
-                std::ifstream ifs(cfgfiles.at(i).c_str());
+                ifstream ifs(cfgfiles.at(i).c_str());
                 po::store(po::parse_config_file(ifs, cfgfile_options), vm);
             }
         }

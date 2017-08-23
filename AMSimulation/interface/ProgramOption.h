@@ -14,7 +14,6 @@ struct ProgramOption {
     std::string matrixfile;
     std::string roadfile;
     std::string trackfile;
-    std::string htmfile;
 
     int         verbose;
     int         speedup;
@@ -27,7 +26,6 @@ struct ProgramOption {
     unsigned    tower;
     std::string superstrip;
     std::string algo;
-    std::string htmconf;
 
     float       minPt;
     float       maxPt;
@@ -51,12 +49,16 @@ struct ProgramOption {
     unsigned    hitBits;
 
     float       maxChi2;
+    float       maxRedChi2_6out6;
+    float       maxRedChi2_5out6;
     bool        CutPrincipals;
     int         minNdof;
     int         maxCombs;
+    int         maxCombsPreCB;
     int         maxTracks;
 
     int         rmDuplicate;
+    float       maxChi2Match;
     bool        rmParDuplicate;
 
     bool        oldCB;
@@ -65,6 +67,9 @@ struct ProgramOption {
 
     bool        no_trim;
     bool        removeOverlap;
+
+    int         deltaS;
+    std::string deltaSM;
 
     std::string datadir;
 };

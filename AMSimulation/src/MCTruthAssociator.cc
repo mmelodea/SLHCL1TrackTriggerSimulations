@@ -65,12 +65,12 @@ float resolution(float qbpT, std::string trk_param){
 }
 
   static const float degrees_of_freedom = 4.0;
-  //static const float match_chi2_cut   = 12.8;
-  static const float match_chi2_cut   = 16.0;
+  //static const float match_chi2_cut   = 16.0;
+  //static const float match_chi2_cut = po_.maxSynChi2;
 }
 
 // _____________________________________________________________________________
-MCTruthAssociator::MCTruthAssociator() {
+//MCTruthAssociator::MCTruthAssociator() {
     //rms_invPt_    = 0.000165559;
     //rms_phi0_     = 7.29527e-05;
     //rms_cottheta_ = 0.00215212 ;
@@ -88,10 +88,12 @@ MCTruthAssociator::MCTruthAssociator() {
     //rms_cottheta_ = 0.002403;
     //rms_z0_       = 0.083406;
     //rms_d0_       = 1.000000;
-}
+//}
 
 // _____________________________________________________________________________
-void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks) {
+void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::vector<TTTrack2>& tracks, float match_chi2_cut) {
+    
+
     // Sort tracking particles by pT
     std::sort(trkParts.begin(), trkParts.end(), sortByPt);
 
@@ -148,7 +150,11 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 
             // Compute our match chi2 definition for each combination and
             // checks if it is below our defined threshold (12.8)
-            bool accept_quality = accept(trkParts.at(ipart), tracks.at(itrack), quality);
+	    bool accept_quality = accept(trkParts.at(ipart), tracks.at(itrack), quality, match_chi2_cut);
+	    //if(abs(trkParts.at(ipart).pdgId) == 13){
+	      //std::cout<<"trkParts_pdgId: "<<trkParts.at(ipart).pdgId<<", AMtrack: "<<itrack<<", roadRef: "<<tracks.at(itrack).roadRef()<<", combRef: "<<tracks.at(itrack).combRef()<<", MatchChi2: "<<quality<<std::endl;
+	      //std::cout<<"trkPart: "<<trkParts.at(ipart)<<" -- AMtrack: "<<tracks.at(itrack)<<std::endl;
+	    //}
 
             // If matchChi2 > 12.8 keeps the FAKE flag for AM track
             if (!accept_quality) continue;
@@ -209,7 +215,7 @@ void MCTruthAssociator::associate(std::vector<TrackingParticle>& trkParts, std::
 }
 
 // _____________________________________________________________________________
-bool MCTruthAssociator::accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality) {
+bool MCTruthAssociator::accept(const TrackingParticle& trkPart, const TTTrack2& track, float& quality, float match_chi2_cut) {
     quality = squaredNormDiff(trkPart.invPt   , track.invPt()   , resolution(track.invPt(),"invPt")    ) +
               squaredNormDiff(trkPart.phi0    , track.phi0()    , resolution(track.invPt(),"phi0")     ) +
               squaredNormDiff(trkPart.cottheta, track.cottheta(), resolution(track.invPt(),"cottheta") ) +

@@ -17,8 +17,14 @@ class CombinationBuilderFactory
   {
     // bool advancedCombinationBuilder = false;
     bool fillEmptyStubs = true;
-    if (advancedCombinationBuilder) combinationBuilder_ = std::make_shared<AdvancedCombinationBuilder>(fillEmptyStubs);
-    else combinationBuilder_ = std::make_shared<SimpleCombinationBuilder>(fillEmptyStubs);
+    if (advancedCombinationBuilder){
+      std::cout<<"Using advanced combination builder..."<<std::endl;
+      combinationBuilder_ = std::make_shared<AdvancedCombinationBuilder>(fillEmptyStubs);
+    }
+    else{
+      std::cout<<"Using simple combination builder..."<<std::endl;
+      combinationBuilder_ = std::make_shared<SimpleCombinationBuilder>(fillEmptyStubs);
+    }
   }
 
   // Destructor

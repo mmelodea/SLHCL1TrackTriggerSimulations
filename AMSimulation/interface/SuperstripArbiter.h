@@ -22,7 +22,7 @@ class SuperstripArbiter {
 
     // Operators
     unsigned superstripLocal(unsigned moduleId, float strip, float segment) const;
-    unsigned superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds) const;
+    unsigned superstripGlobal(unsigned moduleId, float r, float phi, float z, float ds, unsigned nDSbins = 1, std::string DSM = "CB") const;
 
     // Functions
     void setDefinition(TString definition, unsigned tt, const TriggerTowerMap* ttmap);
@@ -41,7 +41,7 @@ class SuperstripArbiter {
 
     unsigned superstripFixedwidth(unsigned moduleId, float strip, float segment) const;
     unsigned superstripProjective(unsigned moduleId, float r, float phi, float z, float ds) const;
-    unsigned superstripFountain(unsigned moduleId, float r, float phi, float z, float ds) const;
+    unsigned superstripFountain(unsigned moduleId, float r, float phi, float z, float ds, unsigned nDSbins = 1, std::string DSM = "CB") const;
 
     // Member data
     SuperstripType     sstype_;

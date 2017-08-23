@@ -98,6 +98,23 @@ int PatternMatcher::makeRoads(TString src, TString out) {
     // Bookkeepers
     long int nRead = 0, nKept = 0;
 
+                                                                                                                         
+    //Get the layers to be applied the deltaS ss definition                                                                                                 
+    std::vector<unsigned int> dslayers;
+    int deltaS_layers = po_.deltaS;
+    while( deltaS_layers > 0 ){
+      int ilayer = deltaS_layers % 10;
+      dslayers.push_back(ilayer);
+      deltaS_layers /= 10;
+    }
+    std::reverse(dslayers.begin(),dslayers.end());
+    const int ndslayers = dslayers.size();
+    std::cout<<"Configuration for SS ID: "<<po_.deltaSM<<" -- (layer/#bins): ";
+    for(int idsl=0; idsl<ndslayers; ++idsl)
+      std::cout<<" l"<<idsl<<"/bs"<<dslayers[idsl];
+    std::cout<<std::endl;
+    
+
     for (long long ievt=0; ievt<nEvents_; ++ievt) {
         if (reader.loadTree(ievt) < 0)  break;
         reader.getEntry(ievt);
@@ -216,22 +233,26 @@ int PatternMatcher::makeRoads(TString src, TString out) {
             float    stub_z   = reader.vb_z       ->at(istub);
             float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
 
+            //Get the layer & number of bins to split deltaS
+            unsigned lay16    = compressLayer(decodeLayer(moduleId));
+	    unsigned nDSbins = dslayers[lay16];
+
             // Find superstrip ID
             unsigned ssId = 0;
             if (!arbiter_ -> useGlobalCoord()) {  // local coordinates
                 ssId = arbiter_ -> superstripLocal(moduleId, strip, segment);
 
             } else {                              // global coordinates
-                ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+	      ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds, nDSbins, po_.deltaSM);
             }
 
-            unsigned lay16    = compressLayer(decodeLayer(moduleId));
+            //unsigned lay16    = compressLayer(decodeLayer(moduleId));
 
             // Push into hit buffer
             hitBuffer_.insert(lay16, ssId, istub);
 
             if (verbose_>2) {
-                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << " clusRef0: " << reader.vb_clusRef0->at(istub) << " clusRef1: " << reader.vb_clusRef1->at(istub) << std::endl;
+                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
                 std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << std::endl;
             }
 
@@ -296,10 +317,14 @@ int PatternMatcher::makeRoads(TString src, TString out) {
         if (! roads.empty())
             ++nKept;
 
-        // Sort roads by pT
-        std::stable_sort(roads.begin(), roads.end(), [](const TTRoad& lhs, const TTRoad& rhs) {
-          return (std::abs(lhs.patternInvPt) < std::abs(rhs.patternInvPt));  // higher pT first
-        });
+        // Sort roads by decreasing pT
+        //std::stable_sort(roads.begin(), roads.end(), [](const TTRoad& lhs, const TTRoad& rhs) {
+	//    return (std::abs(lhs.patternInvPt) < std::abs(rhs.patternInvPt));  // higher pT first
+        //});
+	//Sort roads by frequency as agreed on meeting with Luciano & Sergo
+	//std::stable_sort(roads.begin(), roads.end(), [](const TTRoad& lhs, const TTRoad& rhs){
+	//    return (lhs.patternFreq > rhs.patternFreq);
+	//});
 
         assert(reader.vb_modId->size() == stubs_bitString.size());
         assert(reader.vb_modId->size() == stubs_superstripId.size());

@@ -21,7 +21,6 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  matrixfile: "   << po.matrixfile
       << "  roadfile: "     << po.roadfile
       << "  trackfile: "    << po.trackfile
-      << "  htmfile: "      << po.htmfile
 
       << "  verbose: "      << po.verbose
       << "  speedup: "      << po.speedup
@@ -34,7 +33,6 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  tower: "        << po.tower
       << "  superstrip: "   << po.superstrip
       << "  algo: "         << po.algo
-      << "  htmconf: "      << po.htmconf
 
       << "  minPt: "        << po.minPt
       << "  maxPt: "        << po.maxPt
@@ -58,13 +56,17 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  view: "         << po.view
       << "  hitBits: "      << po.hitBits
 
-      << "  maxChi2: "      << po.maxChi2
+      //<< "  maxChi2: "      << po.maxChi2
+      << "  maxRedChi2_6out6: " << po.maxRedChi2_6out6
+      << "  maxRedChi2_5out6: " << po.maxRedChi2_5out6
       << "  CutPrincipals: "<< po.CutPrincipals
       << "  minNdof: "      << po.minNdof
       << "  maxCombs: "     << po.maxCombs
+      << "  maxCombsPreCB: "<< po.maxCombsPreCB
       << "  maxTracks: "    << po.maxTracks
 
       << "  rmDuplicate: "  << po.rmDuplicate
+      << "  maxChi2Match:  "  << po.maxChi2Match
       << "  rmParDuplicate: " << po.rmParDuplicate
 
       << "  oldCB: "        << po.oldCB
@@ -72,6 +74,9 @@ std::ostream& operator<<(std::ostream& o, const ProgramOption& po) {
       << "  PDDS: "         << po.PDDS
 
       << "  no_trim: "      << po.no_trim
+
+      << "  deltaS: "       << po.deltaS
+      << "  deltaSM: "      << po.deltaSM
 
       << "  datadir: "      << po.datadir
       ;
