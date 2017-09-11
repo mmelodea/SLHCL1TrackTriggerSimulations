@@ -23,13 +23,8 @@ namespace {
 
 void DuplicateRemoval::checkTracks(std::vector<TTTrack2>& all_tracks, int dupRm) {
 
-  // Prevents wrong checking
-  if (dupRm > 6) {
-    throw std::invalid_argument("Number of stubs above maximum (6)");
-  }
-
   // If setted, duplicate removal is done
-  if (dupRm != -1) {
+  if (dupRm >= 0 && dupRm <= 6) {
     // Sort AM tracks by logic and pt (decreasing)
     //std::sort(all_tracks.begin(), all_tracks.end(), sortByLogicPt);
     //std::sort(all_tracks.begin(), all_tracks.end(), sortByChi2);
@@ -39,7 +34,6 @@ void DuplicateRemoval::checkTracks(std::vector<TTTrack2>& all_tracks, int dupRm)
     std::vector<TTTrack2> unique_tracks;
 
     for (unsigned int itrack = 0; itrack < all_tracks.size(); itrack++) {
-      //if (all_tracks.at(itrack).chi2()/all_tracks.at(itrack).ndof() > 3) std::cout<<"Violates Chi2/ndof<3 cut"<<std::endl;
 
       bool duplicate_found = false;
       //int duplicateTpId = -1;
@@ -68,21 +62,7 @@ void DuplicateRemoval::checkTracks(std::vector<TTTrack2>& all_tracks, int dupRm)
 
       // If track is not sharing more than allowed number of stubs, store it
       if (!duplicate_found)
-        unique_tracks.push_back(all_tracks.at(itrack));
-
-
-      
-      //std::cout<<"Road: "<<all_tracks.at(itrack).roadRef()<<", Comb: "<<all_tracks.at(itrack).combRef();
-      //for(int ist=0; ist<(int)all_tracks.at(itrack).stubRefs().size(); ++ist){
-	//if( all_tracks.at(itrack).stubRefs()[ist] != 999999999 )
-	// std::cout<<reader.vb_tpId->at( all_tracks.at(itrack).stubRefs()[ist] );
-	//else std::cout<<"-1";
-
-	//if(ist < 5) std::cout<<", ";
-	//}
-      //std::cout<<", FitterChi2/ndof: "<<all_tracks.at(itrack).chi2Red()<<", PattRef: "<<all_tracks.at(itrack).patternRef();
-      //std::cout<<", DuplicateTpId: "<<duplicateTpId<<std::endl;
-      
+        unique_tracks.push_back(all_tracks.at(itrack)); 
 
     }  // loop over all tracks
 
@@ -90,7 +70,9 @@ void DuplicateRemoval::checkTracks(std::vector<TTTrack2>& all_tracks, int dupRm)
     // Keeps only the unique tracks
     std::swap(all_tracks, unique_tracks);
 
-  } else {
+  }
+
+  else {
     // The standard situation... no duplicate removal
     // So, nothing is done even calling the duplication removal member
   }

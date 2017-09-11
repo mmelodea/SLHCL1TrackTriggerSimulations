@@ -112,8 +112,8 @@ int main(int argc, char **argv) {
         // Only for track fitting
         ("maxChi2"      , po::value<float>(&option.maxChi2)->default_value(14.6), "Specify maximum reduced chi-squared")  // Marco De Mattia recommends 14.6 as a reasonable cut value
 
-        ("maxRedChi2_6out6", po::value<float>(&option.maxRedChi2_6out6)->default_value(2.5), "Specify maximum reduced chi2 for logic 6/6")  //Luciano recommends maxChi2 = 20.0 --> redChi2 = 2.5
-        ("maxRedChi2_5out6", po::value<float>(&option.maxRedChi2_5out6)->default_value(3.8), "Specify maximum reduced chi2 for logic 5/6")  //Luciano recommends maxChi2 = 22.8 --> redChi2 = 3.8
+      // ("maxRedChi2_6out6", po::value<float>(&option.maxRedChi2_6out6)->default_value(2.5), "Specify maximum reduced chi2 for logic 6/6")  //Luciano recommends maxChi2 = 20.0 --> redChi2 = 2.5
+      // ("maxRedChi2_5out6", po::value<float>(&option.maxRedChi2_5out6)->default_value(3.8), "Specify maximum reduced chi2 for logic 5/6") //Luciano recommends maxChi2 = 22.8 --> redChi2 = 3.8
 
         ("CutPrincipals", po::bool_switch(&option.CutPrincipals)->default_value(false), "replace chi**2 cut with principals cut")
         ("minNdof"      , po::value<int>(&option.minNdof)->default_value(1), "Specify minimum degree of freedom")
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 
         //Pattern building using stub bend information
         ("deltaS", po::value<int>(&option.deltaS)->default_value(111111), "Option to build pattern using stub bend info for each layer specified")
-        ("deltaSM", po::value<std::string>(&option.deltaSM)->default_value("ASYM"), "Delta S bins division method: CB affects only central bin (only 3 bins), ALL allows to subdivide the deltaS range")
+        ("deltaSM", po::value<std::string>(&option.deltaSM)->default_value("ASYM"), "Delta S bins division method: ASYM only central range is adjustable, SYM creates ranges with equal width")
 
 
         // Only for parameter-based duplicate removal

@@ -54,7 +54,7 @@ bool PrincipalCuts(std::vector<float> princes){
   return pass;
 }
 
-
+  //Track fitter cut parameterization
 bool AcceptTrack(int ndof, float trackPt, float tfchi2){
     if( (ndof == 8 && tfchi2 < 20.2) ||
 	(ndof == 6 && ((trackPt >= 3 && trackPt < 5 && tfchi2 < 15.8) || (trackPt >= 5 && trackPt < 10 && tfchi2 < 8.5) ||
@@ -227,7 +227,7 @@ int TrackFitter::makeTracks(TString src, TString out) {
 		  //if (atrack.chi2Red() < po_.maxChi2){  // reduced chi^2 = chi^2 / ndof
                   //      tracks.push_back(atrack);
 		  //}
-		  ///Luciano's suggestion: cut separately according to combination logic
+		  ///Luciano's suggestion: cut separately according to logic and track pt
 		  if(AcceptTrack(atrack.ndof(), atrack.pt(), atrack.chi2())){
 		    tracks.push_back(atrack);
 		  }
@@ -256,22 +256,9 @@ int TrackFitter::makeTracks(TString src, TString out) {
         if (tracks.size() > (unsigned) po_.maxTracks)
             tracks.resize(po_.maxTracks);
 
-
-        // ---------------------------------------------------------------------
-        // Classify tracks as duplicates or not (for duplicate removal)
-        // In the algorithm, AM tracks are sorted by chi2 (used to be matching logic and pT)
-        // ---------------------------------------------------------------------
-	//std::cout<<"-------- BEFORE DR ---------------"<<std::endl;
-        //for (unsigned int itrack = 0; itrack < tracks.size(); itrack++){
-	//std::cout<<"Event: "<<ievt<<", roadRef: "<<tracks.at(itrack).roadRef()<<", combRef: "<<tracks.at(itrack).combRef()<<", stubs: "<<tracks.at(itrack).stubRefs()[0]<<"/"<<tracks.at(itrack).stubRefs()[1]<<"/"<<tracks.at(itrack).stubRefs()[2]<<"/"<<tracks.at(itrack).stubRefs()[3]<<"/"<<tracks.at(itrack).stubRefs()[4]<<"/"<<tracks.at(itrack).stubRefs()[5]<<", chi2/ndof: "<<tracks.at(itrack).chi2Red()<<std::endl;
-        //}
+	// Classifies tracks as dupiclates or not (duplicates are removed)
         DuplicateRemoval flagDuplicates;
         if (po_.rmDuplicate != -1) flagDuplicates.checkTracks(tracks, po_.rmDuplicate);
-	//for (unsigned int itrack = 0; itrack < tracks.size(); itrack++){
-	//std::cout<<"Event: "<<ievt<<", roadRef: "<<tracks.at(itrack).roadRef()<<", combRef: "<<tracks.at(itrack).combRef()<<", chi2/ndof: "<<tracks.at(itrack).chi2Red()<<std::endl;
-	//}
-
-
         //----------------------------------------------------------------------
         // Identify and flag duplicates by defining a track-parameter space
         // inside of which anything is considered to be a single track
